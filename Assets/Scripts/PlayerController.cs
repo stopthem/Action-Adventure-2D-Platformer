@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     // public InputDetection inputDetection;
+    private PlayerAnimation m_playerAnimation;
 
     private int m_direction;
 
@@ -19,10 +20,10 @@ public class PlayerController : MonoBehaviour
     private float m_horizontalMove;
     public float moveSpeed;
     public float jumpSpeed;
-    
+
     private bool m_grounded;
 
-    [SerializeField]private LayerMask m_groundedLayer;
+    [SerializeField] private LayerMask m_groundedLayer;
 
     // private Joystick joystick;
 
@@ -34,16 +35,20 @@ public class PlayerController : MonoBehaviour
         m_rigidBody = GetComponent<Rigidbody2D>();
 
         m_playerTransform = GetComponent<Transform>();
+
+        m_playerAnimation = GetComponent<PlayerAnimation>();
     }
 
     private void Update()
     {
         MoveCharacter();
         GetPlayerDirection();
+        IsGrounded();
+        HandleAttack();
     }
 
     // handles physics
-    public void FixedUpdate()
+    private void FixedUpdate()
     {
         m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
     }
@@ -101,6 +106,15 @@ public class PlayerController : MonoBehaviour
         m_moveInput.Normalize();
         // }
         m_horizontalMove = moveSpeed * m_moveInput.x;
+
+        m_playerAnimation.Move(m_moveInput.x);
+
+        HandleDirection();
+
+    }
+
+    private void HandleDirection()
+    {
         if (m_horizontalMove < 0)
         {
             m_playerTransform.rotation = Quaternion.Euler(0, 180, 0);
@@ -109,7 +123,6 @@ public class PlayerController : MonoBehaviour
         {
             m_playerTransform.rotation = Quaternion.Euler(0, 0, 0);
         }
-
     }
 
     private void HandleGamepadMovement()
@@ -151,22 +164,41 @@ public class PlayerController : MonoBehaviour
         // }
     }
 
-    // Handles jump button on click
-    public void JumpButton()
+    private void IsGrounded()
     {
-        m_buttonUsed++;
-
         RaycastHit2D hitInfo = Physics2D.Raycast(transform.position, Vector2.down, 1f, m_groundedLayer.value);
+        Debug.DrawRay(transform.position, Vector2.down, Color.green);
+
         if (hitInfo.collider != null)
         {
             m_grounded = true;
+            m_playerAnimation.Jump(false);
             m_buttonUsed = 0;
         }
-        if (m_grounded && m_buttonUsed == 0)
+        else
         {
-            m_rigidBody.velocity = Vector2.up * jumpSpeed;
             m_grounded = false;
-            m_buttonUsed++;
+            m_playerAnimation.Jump(true);
         }
     }
+
+    // Handles jump button on click
+    public void JumpButton()
+    {
+        // IsGrounded();
+        m_buttonUsed++;
+        if (m_grounded && m_buttonUsed == 1)
+        {
+            m_rigidBody.velocity = Vector2.up * jumpSpeed;
+        }
+    }
+
+    private void HandleAttack()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            m_playerAnimation.Attack();
+        }
+    }
+
 }
