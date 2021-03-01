@@ -169,20 +169,26 @@ public class PlayerController : MonoBehaviour
 
     private void IsGrounded()
     {
-        RaycastHit2D hitInfo = Physics2D.BoxCast(m_boxCollider2D.bounds.center,m_boxCollider2D.bounds.size, 0f, Vector2.down, .5f, m_groundedLayer.value);
+        RaycastHit2D hitInfo = Physics2D.BoxCast(m_boxCollider2D.bounds.center, m_boxCollider2D.bounds.size, 0f, Vector2.down, .3f, m_groundedLayer.value);
         // Debug.DrawRay(m_boxCollider2D.bounds.center, Vector2.down * .5f, Color.green);
-        
+
 
         if (hitInfo.collider != null)
         {
             m_grounded = true;
             m_playerAnimation.Jump(false);
+            m_playerAnimation.Falling(false);
             m_buttonUsed = 0;
         }
         else
         {
             m_grounded = false;
             m_playerAnimation.Jump(true);
+        }
+
+        if (m_rigidBody.velocity.y < 0)
+        {
+            m_playerAnimation.Falling(true);
         }
     }
 
@@ -204,6 +210,6 @@ public class PlayerController : MonoBehaviour
             m_playerAnimation.Attack();
         }
     }
-    
+
 
 }

@@ -5,12 +5,10 @@ using UnityEngine;
 public class PlayerAnimation : MonoBehaviour
 {
     private Animator m_movementAnimator;
-    private Animator m_swordAnimator;
 
     private void Awake()
     {
         m_movementAnimator = GetComponentInChildren<Animator>();
-        m_swordAnimator = transform.GetChild(1).GetComponent<Animator>();
     }
     public void Move(float move)
     {
@@ -24,7 +22,10 @@ public class PlayerAnimation : MonoBehaviour
     public void Attack()
     {
         m_movementAnimator.SetTrigger("Attack");
-        m_swordAnimator.SetTrigger("SwingEffect");
+    }
 
+    public void Falling(bool status)
+    {
+        m_movementAnimator.SetBool("IsFalling",status);
     }
 }

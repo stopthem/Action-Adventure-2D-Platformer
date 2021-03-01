@@ -1,56 +1,32 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class MossGiant : Enemy
 {
-    [SerializeField] protected Transform pointA, pointB;
-    private Vector3 m_target;
+    [SerializeField] private AnimationClip idleAnimation;
 
-    private Animator animator;
-    protected override void Start()
-    {
-        base.Start();
-        animator = GetComponentInChildren<Animator>();
-    }
     protected override void Update()
     {
         base.Update();
-        HandleMovement();
+        if (animator.GetBool("Idle") && canMove)
+        {
+            StartCoroutine(WaypointRoutine());
+        }
     }
 
-    private void HandleMovement()
+    private IEnumerator WaypointRoutine()
     {
-        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Moss_Giant_Idle"))
-        {
-            return;
-        }
+        animator.SetBool("Idle", true);
+        animator.SetBool("Walking", false);
 
-        if (m_target == pointA.position)
-        {
-            spriteRenderer.flipX = true;
-        }
-        else
-        {
-            spriteRenderer.flipX = false;
-        }
+        yield return new WaitForSeconds(idleAnimation.length);
 
-        if (Vector2.Distance(transform.position, pointA.position) < 0.10f)
-        {
-
-            m_target = pointB.position;
-            animator.SetTrigger("Idle");
-
-        }
-        else if (Vector2.Distance(transform.position, pointB.position) < 0.10f)
-        {
-
-            m_target = pointA.position;
-            animator.SetTrigger("Idle");
-        }
-
-        transform.localPosition = Vector2.MoveTowards(transform.position, m_target, speed * Time.deltaTime);
+        animator.SetBool("Idle", false);
+        animator.SetBool("Walking", true);
 
     }
 
+    
 }
