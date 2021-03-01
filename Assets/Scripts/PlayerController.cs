@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour
 
     private int m_direction;
 
+    private BoxCollider2D m_boxCollider2D;
+
     private Rigidbody2D m_rigidBody;
 
     private Transform m_playerTransform;
@@ -37,6 +39,7 @@ public class PlayerController : MonoBehaviour
         m_playerTransform = GetComponent<Transform>();
 
         m_playerAnimation = GetComponent<PlayerAnimation>();
+        m_boxCollider2D = GetComponent<BoxCollider2D>();
     }
 
     private void Update()
@@ -166,8 +169,9 @@ public class PlayerController : MonoBehaviour
 
     private void IsGrounded()
     {
-        RaycastHit2D hitInfo = Physics2D.Raycast(transform.position, Vector2.down, 1f, m_groundedLayer.value);
-        Debug.DrawRay(transform.position, Vector2.down, Color.green);
+        RaycastHit2D hitInfo = Physics2D.BoxCast(m_boxCollider2D.bounds.center,m_boxCollider2D.bounds.size, 0f, Vector2.down, .5f, m_groundedLayer.value);
+        // Debug.DrawRay(m_boxCollider2D.bounds.center, Vector2.down * .5f, Color.green);
+        
 
         if (hitInfo.collider != null)
         {
@@ -200,5 +204,6 @@ public class PlayerController : MonoBehaviour
             m_playerAnimation.Attack();
         }
     }
+    
 
 }
