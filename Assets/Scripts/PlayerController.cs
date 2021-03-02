@@ -5,7 +5,9 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     // public InputDetection inputDetection;
+
     private PlayerAnimation m_playerAnimation;
+    private Enemy m_enemy;
 
     private int m_direction;
 
@@ -22,8 +24,14 @@ public class PlayerController : MonoBehaviour
     private float m_horizontalMove;
     public float moveSpeed;
     public float jumpSpeed;
+    public float attackRange = .5f;
+    public float damage;
 
     private bool m_grounded;
+    public bool canDamage;
+
+    public Transform attackPoint;
+    public LayerMask enemyLayer;
 
     [SerializeField] private LayerMask m_groundedLayer;
 
@@ -39,7 +47,10 @@ public class PlayerController : MonoBehaviour
         m_playerTransform = GetComponent<Transform>();
 
         m_playerAnimation = GetComponent<PlayerAnimation>();
+
         m_boxCollider2D = GetComponent<BoxCollider2D>();
+
+        m_enemy = GetComponent<Enemy>();
     }
 
     private void Update()
@@ -101,7 +112,7 @@ public class PlayerController : MonoBehaviour
         // }
         // else //test code for editor
         // {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.W))
         {
             JumpButton();
         }
@@ -205,10 +216,35 @@ public class PlayerController : MonoBehaviour
 
     private void HandleAttack()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            m_playerAnimation.Attack();
+            StartCoroutine(AttackRoutine());
         }
+    }
+
+    private IEnumerator AttackRoutine()
+    {
+        m_playerAnimation.Attack();
+
+        while (canDamage == false)
+        {
+            yield return null;
+        }
+
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
+
+        if (hitEnemies != null && canDamage)
+        {
+            foreach (var enemy in hitEnemies)
+            {
+                enemy.GetComponent<Enemy>().Damage(damage);
+            }
+        }
+    }
+
+    public void CanDamage()
+    {
+        canDamage = true;
     }
 
 

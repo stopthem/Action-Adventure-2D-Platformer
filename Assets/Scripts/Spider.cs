@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Spider : Enemy
 {
-    protected override void Attack()
+    public override void Attack()
     {
     }
 }

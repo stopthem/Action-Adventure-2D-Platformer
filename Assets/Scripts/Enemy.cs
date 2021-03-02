@@ -3,30 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy : MonoBehaviour
+public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 {
-    [SerializeField] protected int speed;
-    [SerializeField] protected int health;
+    [SerializeField] protected float speed;
+    [SerializeField] protected float health;
+    protected float currentHealth;
+
     [Header("Waypoint Movement")]
     [SerializeField] protected bool isWaypointMovement;
     [SerializeField] protected Transform pointA, pointB;
+
     [Header("Aggro Movement")]
     [SerializeField] protected bool isAggroMovement;
     [SerializeField] protected float rangeToAggro;
     [SerializeField] protected float rangeToAttack;
 
-    protected int checkpoint;
 
-    protected float distance;
+    [HideInInspector] public int attackItaration;
+
+    protected float distanceToPlayer;
 
     protected bool canMove = true;
     protected bool targetIsPlayer = false;
+    protected bool isDead = false;
 
     protected Rigidbody2D theRB2D;
     protected Transform enemyTransform;
     protected SpriteRenderer spriteRenderer;
-    protected Animator animator;
-    [SerializeField] protected AnimationClip attackAnimation;
+
+    private EnemyAnimation m_enemyAnimation;
 
     protected Transform playerTransform;
 
@@ -41,33 +46,39 @@ public class Enemy : MonoBehaviour
     protected virtual void Awake()
     {
         theRB2D = GetComponent<Rigidbody2D>();
+
         enemyTransform = GetComponent<Transform>();
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        animator = GetComponentInChildren<Animator>();
-        enemySprite = GetComponentInChildren<SpriteRenderer>();
+
+        spriteRenderer = GetComponent<SpriteRenderer>();
+
+        enemySprite = GetComponent<SpriteRenderer>();
+
+        m_enemyAnimation = GetComponent<EnemyAnimation>();
 
         playerTransform = GameObject.Find("Player").GetComponent<Transform>();
     }
 
-    protected virtual void Attack()
+    private void Start()
     {
-
+        currentHealth = health;
     }
+
+    public abstract void Attack();
 
     protected virtual void Update()
     {
         HandleMovement();
 
         HandleDirection();
-        print(canMove);
-        if (animator.GetBool("Attacking"))
+
+        if (m_enemyAnimation.GetBool("Attacking"))
         {
             theRB2D.velocity = Vector2.zero;
         }
 
     }
 
-    protected void HandleDirection()
+    private void HandleDirection()
     {
         if (theRB2D.velocity.x < 0)
         {
@@ -79,15 +90,15 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    protected void HandleMovement()
+    private void HandleMovement()
     {
-        distance = Vector2.Distance(transform.position, playerTransform.position);
+        distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
 
-        if (enemySprite.isVisible && playerTransform.gameObject.activeInHierarchy)
+        if (enemySprite.isVisible && playerTransform.gameObject.activeInHierarchy && !isDead)
         {
             moveDirection = Vector2.zero;
 
-            if (isWaypointMovement && !targetIsPlayer)
+            if (isWaypointMovement && !targetIsPlayer && m_enemyAnimation.idleAnimation != null)
             {
                 HandleWaypointMovement();
             }
@@ -96,14 +107,15 @@ public class Enemy : MonoBehaviour
             {
                 HandleAggroMovement();
             }
+
             moveDirection.Normalize();
             theRB2D.velocity = moveDirection * speed;
         }
     }
 
-    protected void HandleAggroMovement()
+    private void HandleAggroMovement()
     {
-        if (distance <= rangeToAggro)
+        if (distanceToPlayer <= rangeToAggro)
         {
             if (playerTransform.position.x < transform.position.x)
             {
@@ -114,9 +126,9 @@ public class Enemy : MonoBehaviour
                 enemyTransform.rotation = Quaternion.Euler(0, 0, 0);
             }
 
-            if (canMove && !animator.GetBool("Attacking"))
+            if (canMove && !m_enemyAnimation.GetBool("Attacking"))
             {
-                animator.SetBool("Walking", true);
+                m_enemyAnimation.Walking(true);
 
                 if (isWaypointMovement)
                 {
@@ -134,7 +146,7 @@ public class Enemy : MonoBehaviour
         {
             if (isAggroMovement && !isWaypointMovement)
             {
-                animator.SetBool("Walking", false);
+                m_enemyAnimation.Walking(false);
             }
 
             if (isWaypointMovement)
@@ -143,18 +155,17 @@ public class Enemy : MonoBehaviour
             }
         }
 
-        if (distance <= rangeToAttack)
+        if (distanceToPlayer <= rangeToAttack)
         {
-            checkpoint++;
-            if (checkpoint == 1)
+            attackItaration++;
+            if (attackItaration == 1)
             {
-                StartCoroutine(AttackAnimationRoutine());
+                StartCoroutine(m_enemyAnimation.AttackAnimationRoutine());
             }
         }
-
         if (isAggroMovement && !isWaypointMovement || targetIsPlayer)
         {
-            if (animator.GetBool("Walking"))
+            if (m_enemyAnimation.GetBool("Walking"))
             {
                 moveDirection = playerTransform.position - transform.position;
             }
@@ -164,23 +175,13 @@ public class Enemy : MonoBehaviour
 
     }
 
-    private IEnumerator AttackAnimationRoutine()
-    {
-        moveDirection = Vector2.zero;
-        animator.SetBool("Walking", false);
-        animator.SetBool("Attacking", true);
-        Attack();
-
-        yield return new WaitForSeconds(attackAnimation.length);
-
-        animator.SetBool("Attacking", false);
-        animator.SetBool("Walking", true);
-        checkpoint = 0;
-
-    }
-
     private void HandleWaypointMovement()
     {
+        if (m_enemyAnimation.GetBool("Idle") && canMove)
+        {
+            StartCoroutine(m_enemyAnimation.WaypointRoutine());
+        }
+
         if (playerTransform.position.x < transform.position.x)
         {
             enemyTransform.rotation = Quaternion.Euler(0, 180, 0);
@@ -198,7 +199,7 @@ public class Enemy : MonoBehaviour
 
             target = pointB.position;
             oldTarget = target;
-            animator.SetBool("Idle", true);
+            m_enemyAnimation.Idle(true);
 
 
 
@@ -207,16 +208,16 @@ public class Enemy : MonoBehaviour
         {
             target = pointA.position;
             oldTarget = target;
-            animator.SetBool("Idle", true);
+            m_enemyAnimation.Idle(true);
 
         }
 
-        if (Vector2.Distance(target, transform.position) < 1f)
+        if (Vector2.Distance(target, transform.position) < 1f || distanceToA < distanceToPlayer && distanceToB < distanceToPlayer)
         {
             target = oldTarget;
         }
 
-        if (animator.GetBool("Walking"))
+        if (m_enemyAnimation.GetBool("Walking"))
         {
             moveDirection = target - transform.position;
             moveDirection.Normalize();
@@ -228,10 +229,18 @@ public class Enemy : MonoBehaviour
         if (other.gameObject.CompareTag("enemyWall"))
         {
             canMove = false;
-            animator.SetBool("Walking", false);
+            m_enemyAnimation.Walking(false);
             if (isWaypointMovement)
             {
-                animator.SetBool("Idle", true);
+                m_enemyAnimation.Idle(true);
+
+                if (!targetIsPlayer)
+                {
+                    target = oldTarget;
+                    canMove = true;
+                    m_enemyAnimation.Idle(false);
+                    m_enemyAnimation.Walking(true);
+                }
             }
         }
     }
@@ -243,9 +252,30 @@ public class Enemy : MonoBehaviour
             canMove = true;
             if (isWaypointMovement)
             {
-                animator.SetBool("Idle", false);
-                animator.SetBool("Walking", true);
+                m_enemyAnimation.Idle(false);
+                m_enemyAnimation.Walking(true);
             }
         }
+    }
+
+    public void Damage(float damageTaken)
+    {
+        currentHealth -= damageTaken;
+        if (m_enemyAnimation.takeHitAnimation != null)
+        {
+            StartCoroutine(m_enemyAnimation.TakeHitRoutine());
+        }
+
+        if (currentHealth <= 0)
+        {
+            Killed();
+        }
+    }
+
+    public void Killed()
+    {
+        isDead = true;
+        m_enemyAnimation.DeathAnim();
+        Destroy(gameObject, 5f);
     }
 }
