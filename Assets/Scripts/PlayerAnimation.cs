@@ -24,6 +24,24 @@ public class PlayerAnimation : MonoBehaviour
     {
         m_movementAnimator.SetBool("Jump", state);
     }
+
+    public void TakeHit()
+    {
+        if (!m_playerController.isDead)
+        {
+            m_movementAnimator.SetTrigger("TakeHit");
+        }
+
+    }
+
+    public void DeathAnimation()
+    {
+        if (!m_playerController.isDead)
+        {
+            m_movementAnimator.SetTrigger("Death");
+        }
+    }
+
     public void Attack()
     {
         if (m_movementAnimator.GetBool("Attacking") || m_movementAnimator.GetFloat("Move") != 0)
@@ -39,8 +57,9 @@ public class PlayerAnimation : MonoBehaviour
     private IEnumerator AttackAnimRoutine()
     {
         m_movementAnimator.SetBool("Attacking", true);
+
         yield return new WaitForSeconds(attackAnimation.length);
-        m_playerController.canDamage = false;
+
         m_movementAnimator.SetBool("Attacking", false);
 
     }

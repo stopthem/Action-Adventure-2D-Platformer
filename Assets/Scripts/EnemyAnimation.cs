@@ -45,21 +45,25 @@ public class EnemyAnimation : MonoBehaviour
 
     public void DeathAnim()
     {
-        m_animator.SetTrigger("Death");
+        if (m_enemy.isDead)
+        {
+            return;
+        }
+        else
+        {
+            m_animator.SetTrigger("Death");
+        }
     }
 
     public IEnumerator AttackAnimationRoutine()
     {
         Walking(false);
         Attacking(true);
-
-        m_enemy.Attack();
-
+        
         yield return new WaitForSeconds(attackAnimation.length);
-
+        
         Attacking(false);
         Walking(true);
-        m_enemy.attackItaration = 0;
 
     }
 

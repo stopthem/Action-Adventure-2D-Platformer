@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 {
     // public InputDetection inputDetection;
 
     private PlayerAnimation m_playerAnimation;
     private Enemy m_enemy;
 
-    private int m_direction;
+    // private int m_direction;
 
     private BoxCollider2D m_boxCollider2D;
 
@@ -26,9 +26,12 @@ public class PlayerController : MonoBehaviour
     public float jumpSpeed;
     public float attackRange = .5f;
     public float damage;
+    public float health;
+    private float currentHealth;
 
     private bool m_grounded;
     public bool canDamage;
+    [SerializeField] public bool isDead;
 
     public Transform attackPoint;
     public LayerMask enemyLayer;
@@ -53,12 +56,21 @@ public class PlayerController : MonoBehaviour
         m_enemy = GetComponent<Enemy>();
     }
 
+    private void Start()
+    {
+        currentHealth = health;
+    }
+
     private void Update()
     {
-        MoveCharacter();
-        GetPlayerDirection();
-        IsGrounded();
-        HandleAttack();
+        if (!isDead)
+        {
+            MoveCharacter();
+            HandleAttack();
+            IsGrounded();
+        }
+
+        // GetPlayerDirection();
     }
 
     // handles physics
@@ -67,36 +79,16 @@ public class PlayerController : MonoBehaviour
         m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
     }
 
-    // gets player direction for Alice's dash and further use.
-    private void GetPlayerDirection()
-    {
-        if (transform.rotation == Quaternion.Euler(0, 180, 0))
-        {
-            m_direction = 1;
-        }
-        else if (transform.rotation == Quaternion.Euler(0, 0, 0))
-        {
-            m_direction = 2;
-        }
-    }
-
-    // Moving buttons hold process
-    // public void MoveLeft()
+    // private void GetPlayerDirection()
     // {
-    //     m_moveLeft = true;
-    // }
-    // public void StopMoveLeft()
-    // {
-    //     m_moveLeft = false;
-    // }
-    // public void MoveRight()
-    // {
-    //     m_moveRight = true;
-
-    // }
-    // public void StopMoveRight()
-    // {
-    //     m_moveRight = false;
+    //     if (transform.rotation == Quaternion.Euler(0, 180, 0))
+    //     {
+    //         m_direction = 1;
+    //     }
+    //     else if (transform.rotation == Quaternion.Euler(0, 0, 0))
+    //     {
+    //         m_direction = 2;
+    //     }
     // }
 
     // handles all moving based on platform and input device
@@ -110,15 +102,14 @@ public class PlayerController : MonoBehaviour
         // {
         //     HandleMobileMovement();
         // }
-        // else //test code for editor
-        // {
+
         if (Input.GetKeyDown(KeyCode.W))
         {
             JumpButton();
         }
         m_moveInput.x = Input.GetAxisRaw("Horizontal");
         m_moveInput.Normalize();
-        // }
+
         m_horizontalMove = moveSpeed * m_moveInput.x;
 
         m_playerAnimation.Move(m_moveInput.x);
@@ -158,14 +149,10 @@ public class PlayerController : MonoBehaviour
         if (m_moveLeft)
         {
             m_horizontalMove = -moveSpeed;
-
-            // m_playerTransform.rotation = Quaternion.Euler(0, 180, 0);
         }
         else if (m_moveRight)
         {
             m_horizontalMove = moveSpeed;
-
-            // m_playerTransform.rotation = Quaternion.Euler(0, 0, 0);
         }
         else
         {
@@ -206,7 +193,6 @@ public class PlayerController : MonoBehaviour
     // Handles jump button on click
     public void JumpButton()
     {
-        // IsGrounded();
         m_buttonUsed++;
         if (m_grounded && m_buttonUsed == 1)
         {
@@ -225,7 +211,7 @@ public class PlayerController : MonoBehaviour
     private IEnumerator AttackRoutine()
     {
         m_playerAnimation.Attack();
-
+        // waits untill specific attack animation frame
         while (canDamage == false)
         {
             yield return null;
@@ -237,9 +223,11 @@ public class PlayerController : MonoBehaviour
         {
             foreach (var enemy in hitEnemies)
             {
-                enemy.GetComponent<Enemy>().Damage(damage);
+                enemy.gameObject.GetComponent<Enemy>().Damage(damage);
             }
         }
+
+        canDamage = false;
     }
 
     public void CanDamage()
@@ -247,5 +235,20 @@ public class PlayerController : MonoBehaviour
         canDamage = true;
     }
 
+    public void Damage(float damageTaken)
+    {
+        currentHealth -= damageTaken;
+        m_playerAnimation.TakeHit();
 
+        if (currentHealth <= 0)
+        {
+            Killed();
+        }
+    }
+
+    public void Killed()
+    {
+        m_playerAnimation.DeathAnimation();
+        isDead = true;
+    }
 }

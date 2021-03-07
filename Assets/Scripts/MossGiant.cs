@@ -5,7 +5,5 @@ using UnityEngine;
 
 public class MossGiant : Enemy
 {
-    public override void Attack()
-    {
-    }
+    //the reason of this script being blank is because i wanted to do inheritance but this game doesnt need for now. maybe usable after. 
 }

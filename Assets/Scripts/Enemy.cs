@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
+public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 {
     [SerializeField] protected float speed;
     [SerializeField] protected float health;
@@ -18,22 +18,24 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     [SerializeField] protected float rangeToAggro;
     [SerializeField] protected float rangeToAttack;
 
-
-    [HideInInspector] public int attackItaration;
-
     protected float distanceToPlayer;
+    [SerializeField] protected float enemyDamage;
+    [SerializeField] protected float enemyRange;
 
     protected bool canMove = true;
-    protected bool targetIsPlayer = false;
-    protected bool isDead = false;
+    protected bool targetIsPlayer;
+    [HideInInspector] public bool isDead;
+    protected bool canDamage;
 
     protected Rigidbody2D theRB2D;
-    protected Transform enemyTransform;
     protected SpriteRenderer spriteRenderer;
 
     private EnemyAnimation m_enemyAnimation;
+    private PlayerController m_playerController;
 
     protected Transform playerTransform;
+    protected Transform enemyTransform;
+    [SerializeField] protected Transform hitPoint;
 
     protected Vector3 target;
     protected Vector3 moveDirection;
@@ -42,6 +44,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     protected float distanceToB;
 
     protected SpriteRenderer enemySprite;
+
+    [SerializeField] protected LayerMask playerLayer;
 
     protected virtual void Awake()
     {
@@ -56,6 +60,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         m_enemyAnimation = GetComponent<EnemyAnimation>();
 
         playerTransform = GameObject.Find("Player").GetComponent<Transform>();
+
+        m_playerController = GameObject.FindWithTag("Player").GetComponent<PlayerController>();
     }
 
     private void Start()
@@ -63,31 +69,42 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         currentHealth = health;
     }
 
-    public abstract void Attack();
-
     protected virtual void Update()
     {
         HandleMovement();
 
         HandleDirection();
-
-        if (m_enemyAnimation.GetBool("Attacking"))
-        {
-            theRB2D.velocity = Vector2.zero;
-        }
-
     }
 
-    private void HandleDirection()
+    // the reason i didnt abstarct the attack method is because in this game all the enemies going to use the same attack function.
+    protected virtual void Attack()
     {
-        if (theRB2D.velocity.x < 0)
+        StartCoroutine(AttackRoutine());
+    }
+
+    private IEnumerator AttackRoutine()
+    {
+        StartCoroutine(m_enemyAnimation.AttackAnimationRoutine());
+
+        // waiting untill a spesific animation frame
+        while (canDamage == false)
         {
-            enemyTransform.rotation = Quaternion.Euler(0, 180, 0);
+            yield return null;
         }
-        if (theRB2D.velocity.x > 0)
+
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(hitPoint.position, enemyRange, playerLayer);
+
+        if (hitEnemies != null && canDamage)
         {
-            enemyTransform.rotation = Quaternion.Euler(0, 0, 0);
+            foreach (var player in hitEnemies)
+            {
+                player.gameObject.GetComponent<PlayerController>().Damage(enemyDamage);
+                print("I damaged player");
+            }
         }
+
+        canDamage = false;
+
     }
 
     private void HandleMovement()
@@ -113,17 +130,32 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         }
     }
 
+    private void HandleDirection()
+    {
+        if (theRB2D.velocity.x < 0)
+        {
+            enemyTransform.rotation = Quaternion.Euler(0, 180, 0);
+        }
+        if (theRB2D.velocity.x > 0)
+        {
+            enemyTransform.rotation = Quaternion.Euler(0, 0, 0);
+        }
+    }
+
     private void HandleAggroMovement()
     {
-        if (distanceToPlayer <= rangeToAggro)
+        if (distanceToPlayer <= rangeToAggro && !m_playerController.isDead)
         {
-            if (playerTransform.position.x < transform.position.x)
+            if (!m_enemyAnimation.GetBool("Attacking"))
             {
-                enemyTransform.rotation = Quaternion.Euler(0, 180, 0);
-            }
-            if (playerTransform.position.x > transform.position.x)
-            {
-                enemyTransform.rotation = Quaternion.Euler(0, 0, 0);
+                if (playerTransform.position.x < transform.position.x)
+                {
+                    enemyTransform.rotation = Quaternion.Euler(0, 180, 0);
+                }
+                if (playerTransform.position.x > transform.position.x)
+                {
+                    enemyTransform.rotation = Quaternion.Euler(0, 0, 0);
+                }
             }
 
             if (canMove && !m_enemyAnimation.GetBool("Attacking"))
@@ -132,6 +164,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
                 if (isWaypointMovement)
                 {
+                    // saving the last target before player for waypointmovement
                     if (target == pointA.position || target == pointB.position)
                     {
                         oldTarget = target;
@@ -149,21 +182,25 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
                 m_enemyAnimation.Walking(false);
             }
 
-            if (isWaypointMovement)
+            if (isWaypointMovement || m_playerController.isDead)
             {
                 targetIsPlayer = false;
             }
         }
 
-        if (distanceToPlayer <= rangeToAttack)
+        if (distanceToPlayer <= rangeToAttack && !m_playerController.isDead)
         {
-            attackItaration++;
-            if (attackItaration == 1)
+            if (!m_enemyAnimation.GetBool("Attacking"))
             {
-                StartCoroutine(m_enemyAnimation.AttackAnimationRoutine());
+                Attack();
             }
         }
-        if (isAggroMovement && !isWaypointMovement || targetIsPlayer)
+        else if (m_playerController.isDead && isAggroMovement && !isWaypointMovement)
+        {
+            m_enemyAnimation.Walking(false);
+        }
+
+        if (!m_enemyAnimation.GetBool("Attacking") && isAggroMovement && !isWaypointMovement || targetIsPlayer && !m_playerController.isDead)
         {
             if (m_enemyAnimation.GetBool("Walking"))
             {
@@ -182,15 +219,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             StartCoroutine(m_enemyAnimation.WaypointRoutine());
         }
 
-        if (playerTransform.position.x < transform.position.x)
-        {
-            enemyTransform.rotation = Quaternion.Euler(0, 180, 0);
-        }
-        if (playerTransform.position.x > transform.position.x)
-        {
-            enemyTransform.rotation = Quaternion.Euler(0, 0, 0);
-        }
-
         distanceToA = Vector2.Distance(transform.position, pointA.position);
         distanceToB = Vector2.Distance(transform.position, pointB.position);
 
@@ -200,18 +228,14 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             target = pointB.position;
             oldTarget = target;
             m_enemyAnimation.Idle(true);
-
-
-
         }
         else if (distanceToB < 0.5f && !targetIsPlayer)
         {
             target = pointA.position;
             oldTarget = target;
             m_enemyAnimation.Idle(true);
-
         }
-
+        // when player lefts aggro we use last target before player.
         if (Vector2.Distance(target, transform.position) < 1f || distanceToA < distanceToPlayer && distanceToB < distanceToPlayer)
         {
             target = oldTarget;
@@ -226,6 +250,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
     private void OnCollisionStay2D(Collision2D other)
     {
+        // keeping enemies from going to edges
         if (other.gameObject.CompareTag("enemyWall"))
         {
             canMove = false;
@@ -258,9 +283,15 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         }
     }
 
+    private void CanDamage()
+    {
+        canDamage = true;
+    }
+
     public void Damage(float damageTaken)
     {
         currentHealth -= damageTaken;
+
         if (m_enemyAnimation.takeHitAnimation != null)
         {
             StartCoroutine(m_enemyAnimation.TakeHitRoutine());
@@ -274,8 +305,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
     public void Killed()
     {
-        isDead = true;
+
         m_enemyAnimation.DeathAnim();
+        isDead = true;
         Destroy(gameObject, 5f);
     }
 }
