@@ -26,12 +26,12 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     protected bool targetIsPlayer;
     [HideInInspector] public bool isDead;
     protected bool canDamage;
-
+    [SerializeField] protected bool canKnockBack;
     protected Rigidbody2D theRB2D;
     protected SpriteRenderer spriteRenderer;
 
-    private EnemyAnimation m_enemyAnimation;
-    private PlayerController m_playerController;
+    protected EnemyAnimation m_enemyAnimation;
+    protected PlayerController m_playerController;
 
     protected Transform playerTransform;
     protected Transform enemyTransform;
@@ -59,7 +59,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
         m_enemyAnimation = GetComponent<EnemyAnimation>();
 
-        playerTransform = GameObject.Find("Player").GetComponent<Transform>();
+        playerTransform = GameObject.FindWithTag("Player").GetComponent<Transform>();
 
         m_playerController = GameObject.FindWithTag("Player").GetComponent<PlayerController>();
     }
@@ -69,10 +69,9 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         currentHealth = health;
     }
 
-    protected virtual void Update()
+    protected virtual void FixedUpdate()
     {
         HandleMovement();
-
         HandleDirection();
     }
 
@@ -99,7 +98,6 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             foreach (var player in hitEnemies)
             {
                 player.gameObject.GetComponent<PlayerController>().Damage(enemyDamage);
-                print("I damaged player");
             }
         }
 
@@ -219,6 +217,11 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             StartCoroutine(m_enemyAnimation.WaypointRoutine());
         }
 
+        if (isDead)
+        {
+            target = Vector3.zero;
+        }
+
         distanceToA = Vector2.Distance(transform.position, pointA.position);
         distanceToB = Vector2.Distance(transform.position, pointB.position);
 
@@ -291,6 +294,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     public void Damage(float damageTaken)
     {
         currentHealth -= damageTaken;
+        canKnockBack = true;
 
         if (m_enemyAnimation.takeHitAnimation != null)
         {

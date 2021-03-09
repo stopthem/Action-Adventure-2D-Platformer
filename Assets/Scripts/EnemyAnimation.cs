@@ -5,7 +5,7 @@ using UnityEngine;
 public class EnemyAnimation : MonoBehaviour
 {
     private Enemy m_enemy;
-    private Animator m_animator;
+    private Animator m_enemyAnimator;
 
     [Header("Animations")]
     public AnimationClip attackAnimation;
@@ -15,32 +15,32 @@ public class EnemyAnimation : MonoBehaviour
     private void Awake()
     {
         m_enemy = GetComponent<Enemy>();
-        m_animator = GetComponent<Animator>();
+        m_enemyAnimator = GetComponent<Animator>();
     }
 
     public bool GetBool(string s)
     {
-        return m_animator.GetBool(s);
+        return m_enemyAnimator.GetBool(s);
     }
 
     public void Idle(bool status)
     {
-        m_animator.SetBool("Idle", status);
+        m_enemyAnimator.SetBool("Idle", status);
     }
 
     public void Walking(bool status)
     {
-        m_animator.SetBool("Walking", status);
+        m_enemyAnimator.SetBool("Walking", status);
     }
 
     public void Attacking(bool status)
     {
-        m_animator.SetBool("Attacking", status);
+        m_enemyAnimator.SetBool("Attacking", status);
     }
 
     public void TakeHit(bool status)
     {
-        m_animator.SetBool("TakeHit", status);
+        m_enemyAnimator.SetBool("TakeHit", status);
     }
 
     public void DeathAnim()
@@ -51,7 +51,7 @@ public class EnemyAnimation : MonoBehaviour
         }
         else
         {
-            m_animator.SetTrigger("Death");
+            m_enemyAnimator.SetTrigger("Death");
         }
     }
 

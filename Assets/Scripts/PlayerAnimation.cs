@@ -15,6 +15,16 @@ public class PlayerAnimation : MonoBehaviour
         m_playerController = GetComponent<PlayerController>();
     }
 
+    public bool GetBool(string s)
+    {
+        return m_movementAnimator.GetBool(s);
+    }
+
+    public float GetFloat(string f)
+    {
+        return m_movementAnimator.GetFloat(f);
+    }
+
     public void Move(float move)
     {
         m_movementAnimator.SetFloat("Move", Mathf.Abs(move));

@@ -4,5 +4,23 @@ using UnityEngine;
 
 public class Spider : Enemy
 {
-    //the reason of this script being blank is because i wanted to do inheritance but this game doesnt need for now. maybe usable after. 
+    protected override void FixedUpdate()
+    {
+        base.FixedUpdate();
+        
+        if (canKnockBack)
+        {
+            if (playerTransform.position.x < transform.position.x && !isDead)
+            {
+                theRB2D.velocity = Vector2.right * 25;
+                canKnockBack = false;
+            }
+            if (playerTransform.position.x > transform.position.x && !isDead)
+            {
+                theRB2D.velocity = Vector2.left * 25;
+                canKnockBack = false;
+            }
+            
+        }
+    }
 }

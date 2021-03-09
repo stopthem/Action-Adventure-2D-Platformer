@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     private float currentHealth;
 
     private bool m_grounded;
-    public bool canDamage;
+    [SerializeField] private bool canDamage;
     [SerializeField] public bool isDead;
 
     public Transform attackPoint;
@@ -65,13 +65,22 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         if (!isDead)
         {
-            MoveCharacter();
+            if (!m_playerAnimation.GetBool("Attacking"))
+            {
+                MoveCharacter();
+            }
+
             HandleAttack();
             IsGrounded();
         }
 
         // GetPlayerDirection();
     }
+
+    // private void OnDrawGizmos()
+    // {
+    //     Gizmos.DrawWireSphere(attackPoint.position,attackRange);
+    // }
 
     // handles physics
     private void FixedUpdate()
@@ -219,14 +228,28 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
 
-        if (hitEnemies != null && canDamage)
+        if (hitEnemies != null && canDamage && m_playerAnimation.GetBool("Attacking"))
         {
             foreach (var enemy in hitEnemies)
             {
                 enemy.gameObject.GetComponent<Enemy>().Damage(damage);
             }
-        }
+            
+            canDamage = false;
 
+            while (canDamage == false)
+            {
+                yield return null;
+            }
+
+            if (canDamage && hitEnemies != null)
+            {
+                foreach (var enemy in hitEnemies)
+                {
+                    enemy.gameObject.GetComponent<Enemy>().Damage(damage);
+                }
+            }
+        }
         canDamage = false;
     }
 
