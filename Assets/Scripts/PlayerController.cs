@@ -121,7 +121,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         m_horizontalMove = moveSpeed * m_moveInput.x;
 
-        m_playerAnimation.Move(m_moveInput.x);
+        m_playerAnimation.Move(Mathf.Abs(m_moveInput.x));
 
         HandleDirection();
 

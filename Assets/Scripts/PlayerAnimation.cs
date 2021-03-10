@@ -27,7 +27,15 @@ public class PlayerAnimation : MonoBehaviour
 
     public void Move(float move)
     {
-        m_movementAnimator.SetFloat("Move", Mathf.Abs(move));
+        if (move > 0)
+        {
+            m_movementAnimator.SetBool("Moving", true);
+        }
+        else
+        {
+            m_movementAnimator.SetBool("Moving", false);
+        }
+        // m_movementAnimator.SetFloat("Move", Mathf.Abs(move));
     }
 
     public void Jump(bool state)
@@ -54,7 +62,7 @@ public class PlayerAnimation : MonoBehaviour
 
     public void Attack()
     {
-        if (m_movementAnimator.GetBool("Attacking") || m_movementAnimator.GetFloat("Move") != 0)
+        if (m_movementAnimator.GetBool("Attacking") || m_movementAnimator.GetBool("Moving"))
         {
             return;
         }
