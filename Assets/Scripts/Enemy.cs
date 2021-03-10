@@ -26,7 +26,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     protected bool targetIsPlayer;
     [HideInInspector] public bool isDead;
     protected bool canDamage;
-    [SerializeField] protected bool canKnockBack;
+    protected bool canKnockBack;
     protected Rigidbody2D theRB2D;
     protected SpriteRenderer spriteRenderer;
 
@@ -75,7 +75,6 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         HandleDirection();
     }
 
-    // the reason i didnt abstarct the attack method is because in this game all the enemies going to use the same attack function.
     protected virtual void Attack()
     {
         StartCoroutine(AttackRoutine());
@@ -122,10 +121,9 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             {
                 HandleAggroMovement();
             }
-
-            moveDirection.Normalize();
-            theRB2D.velocity = moveDirection * speed;
         }
+        moveDirection.Normalize();
+        theRB2D.velocity = moveDirection * speed;
     }
 
     private void HandleDirection()

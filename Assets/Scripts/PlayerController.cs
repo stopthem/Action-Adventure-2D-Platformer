@@ -21,17 +21,32 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private int m_buttonUsed = 0;
 
-    private float m_horizontalMove;
     public float moveSpeed;
     public float jumpSpeed;
+
+    [Header("Dash")]
+    public float dashDuration;
+    public float dashLength;
+    public float dashSpeed;
+    public float dashCooldown;
+
+    [Header("Moving Atack")]            
+    public float speedAfterMovingAttack;
+    public float movingAttackDamage;
+
+    [Header("General")]
     public float attackRange = .5f;
     public float damage;
     public float health;
-    private float currentHealth;
+    private float m_currentHealth;
+    private float m_originalGravity;
+    private float m_direction;
+    private float m_horizontalMove;
 
     private bool m_grounded;
-    [SerializeField] private bool canDamage;
-    [SerializeField] public bool isDead;
+    private bool m_candamage;
+    private bool canDash = true;
+    [HideInInspector] public bool isDead;
 
     public Transform attackPoint;
     public LayerMask enemyLayer;
@@ -58,47 +73,59 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private void Start()
     {
-        currentHealth = health;
+        m_currentHealth = health;
+        m_originalGravity = m_rigidBody.gravityScale;
     }
 
     private void Update()
     {
         if (!isDead)
         {
-            if (!m_playerAnimation.GetBool("Attacking"))
+            if (!m_playerAnimation.GetBool("Attacking") && !m_playerAnimation.GetBool("MovingAttack"))
             {
                 MoveCharacter();
             }
 
             HandleAttack();
             IsGrounded();
+            GetPlayerDirection();
         }
-
-        // GetPlayerDirection();
     }
 
-    // private void OnDrawGizmos()
-    // {
-    //     Gizmos.DrawWireSphere(attackPoint.position,attackRange);
-    // }
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+    }
 
     // handles physics
     private void FixedUpdate()
     {
         m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
+
+        if (m_playerAnimation.GetBool("IsDashing"))
+        {
+            if (m_direction == 1)
+            {
+                m_rigidBody.AddForce(new Vector2(-dashLength, 0) * dashSpeed, ForceMode2D.Impulse);
+            }
+            else if (m_direction == 2)
+            {
+                m_rigidBody.AddForce(new Vector2(dashLength, 0) * dashSpeed, ForceMode2D.Impulse);
+            }
+        }
     }
 
-    // private void GetPlayerDirection()
-    // {
-    //     if (transform.rotation == Quaternion.Euler(0, 180, 0))
-    //     {
-    //         m_direction = 1;
-    //     }
-    //     else if (transform.rotation == Quaternion.Euler(0, 0, 0))
-    //     {
-    //         m_direction = 2;
-    //     }
-    // }
+    private void GetPlayerDirection()
+    {
+        if (transform.rotation == Quaternion.Euler(0, 180, 0))
+        {
+            m_direction = 1;
+        }
+        else if (transform.rotation == Quaternion.Euler(0, 0, 0))
+        {
+            m_direction = 2;
+        }
+    }
 
     // handles all moving based on platform and input device
     private void MoveCharacter()
@@ -116,6 +143,12 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         {
             JumpButton();
         }
+
+        if (Input.GetKeyDown(KeyCode.LeftControl) && canDash)
+        {
+            StartCoroutine(DashRoutine());
+        }
+
         m_moveInput.x = Input.GetAxisRaw("Horizontal");
         m_moveInput.Normalize();
 
@@ -125,6 +158,25 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         HandleDirection();
 
+    }
+
+    private IEnumerator DashRoutine()
+    {
+        canDash = false;
+
+        m_playerAnimation.Dash(true);
+
+        m_rigidBody.gravityScale = 0;
+
+        yield return new WaitForSeconds(dashDuration);
+
+        m_playerAnimation.Dash(false);
+
+        m_rigidBody.gravityScale = m_originalGravity;
+
+        yield return new WaitForSeconds(dashCooldown);
+
+        canDash = true;
     }
 
     private void HandleDirection()
@@ -215,55 +267,100 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         {
             StartCoroutine(AttackRoutine());
         }
+        // moving attack
+        if (m_playerAnimation.GetBool("Moving") && Input.GetKeyDown(KeyCode.Space))
+        {
+            if (m_direction == 1)
+            {
+                m_horizontalMove = -speedAfterMovingAttack;
+            }
+            else if (m_direction == 2)
+            {
+                m_horizontalMove = speedAfterMovingAttack;
+            }
+
+            m_playerAnimation.MovingAttack(true);
+
+
+
+            StartCoroutine(AttackRoutine());
+        }
     }
 
     private IEnumerator AttackRoutine()
     {
-        m_playerAnimation.Attack();
+        if (m_playerAnimation.GetBool("MovingAttack"))
+        {
+            m_playerAnimation.MovingAttackAnim();
+            yield return new WaitForSeconds(.5f);
+
+        }
+        else
+        {
+            m_playerAnimation.Attack();
+        }
+
         // waits untill specific attack animation frame
-        while (canDamage == false)
+        while (m_candamage == false)
         {
             yield return null;
         }
 
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
 
-        if (hitEnemies != null && canDamage && m_playerAnimation.GetBool("Attacking"))
+        if (hitEnemies != null && m_candamage && m_playerAnimation.GetBool("Attacking") || m_playerAnimation.GetBool("MovingAttack"))
         {
             foreach (var enemy in hitEnemies)
             {
-                enemy.gameObject.GetComponent<Enemy>().Damage(damage);
-            }
-            
-            canDamage = false;
-
-            while (canDamage == false)
-            {
-                yield return null;
-            }
-
-            if (canDamage && hitEnemies != null)
-            {
-                foreach (var enemy in hitEnemies)
+                if (m_playerAnimation.GetBool("MovingAttack"))
+                {
+                    enemy.gameObject.GetComponent<Enemy>().Damage(movingAttackDamage);
+                }
+                else
                 {
                     enemy.gameObject.GetComponent<Enemy>().Damage(damage);
                 }
             }
+            // waits for second spesific animation frame and damages twice
+            if (!m_playerAnimation.GetBool("MovingAttack"))
+            {
+                m_candamage = false;
+
+                while (m_candamage == false)
+                {
+                    yield return null;
+                }
+
+                if (m_candamage && hitEnemies != null)
+                {
+                    foreach (var enemy in hitEnemies)
+                    {
+                        enemy.gameObject.GetComponent<Enemy>().Damage(damage);
+                    }
+                }
+            }
         }
-        canDamage = false;
+        m_candamage = false;
     }
 
+    //animation event for attack
     public void CanDamage()
     {
-        canDamage = true;
+        m_candamage = true;
+    }
+
+    //animation event for movingAttack
+    public void StopPlayer()
+    {
+        m_horizontalMove = 0;
     }
 
     public void Damage(float damageTaken)
     {
-        currentHealth -= damageTaken;
+        m_currentHealth -= damageTaken;
         m_playerAnimation.TakeHit();
 
-        if (currentHealth <= 0)
+        if (m_currentHealth <= 0)
         {
             Killed();
         }

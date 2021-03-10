@@ -4,65 +4,99 @@ using UnityEngine;
 
 public class PlayerAnimation : MonoBehaviour
 {
-    private Animator m_movementAnimator;
+    private Animator m_playerAnimator;
     private PlayerController m_playerController;
 
     public AnimationClip attackAnimation;
+    public AnimationClip dashAttackAnimation;
 
     private void Awake()
     {
-        m_movementAnimator = GetComponentInChildren<Animator>();
+        m_playerAnimator = GetComponentInChildren<Animator>();
         m_playerController = GetComponent<PlayerController>();
     }
 
     public bool GetBool(string s)
     {
-        return m_movementAnimator.GetBool(s);
+        return m_playerAnimator.GetBool(s);
     }
 
     public float GetFloat(string f)
     {
-        return m_movementAnimator.GetFloat(f);
+        return m_playerAnimator.GetFloat(f);
     }
 
     public void Move(float move)
     {
         if (move > 0)
         {
-            m_movementAnimator.SetBool("Moving", true);
+            m_playerAnimator.SetBool("Moving", true);
         }
         else
         {
-            m_movementAnimator.SetBool("Moving", false);
+            m_playerAnimator.SetBool("Moving", false);
         }
-        // m_movementAnimator.SetFloat("Move", Mathf.Abs(move));
+    }
+
+    public void Moving(bool move)
+    {
+        if (!m_playerController.isDead)
+        {
+            m_playerAnimator.SetBool("Moving", move);
+        }
     }
 
     public void Jump(bool state)
     {
-        m_movementAnimator.SetBool("Jump", state);
+        m_playerAnimator.SetBool("Jump", state);
+    }
+
+    public void Dash(bool state)
+    {
+        m_playerAnimator.SetBool("IsDashing", state);
     }
 
     public void TakeHit()
     {
         if (!m_playerController.isDead)
         {
-            m_movementAnimator.SetTrigger("TakeHit");
+            m_playerAnimator.SetTrigger("TakeHit");
         }
+    }
 
+    public void MovingAttack(bool state)
+    {
+        if (!m_playerController.isDead)
+        {
+            m_playerAnimator.SetBool("MovingAttack", true);
+        }
+    }
+
+    public void MovingAttackAnim()
+    {
+        if (!m_playerController.isDead)
+        {
+            StartCoroutine(MovingAttackRoutine());
+        }
+    }
+
+    private IEnumerator MovingAttackRoutine()
+    {
+        yield return new WaitForSeconds(dashAttackAnimation.length);
+        m_playerAnimator.SetBool("MovingAttack", false);
     }
 
     public void DeathAnimation()
     {
         if (!m_playerController.isDead)
         {
-            m_movementAnimator.SetTrigger("Death");
+            m_playerAnimator.SetTrigger("Death");
         }
     }
 
     public void Attack()
     {
-        if (m_movementAnimator.GetBool("Attacking") || m_movementAnimator.GetBool("Moving"))
+        if (m_playerAnimator.GetBool("Attacking") || m_playerAnimator.GetBool("Moving"))
         {
             return;
         }
@@ -74,23 +108,23 @@ public class PlayerAnimation : MonoBehaviour
 
     private IEnumerator AttackAnimRoutine()
     {
-        m_movementAnimator.SetBool("Attacking", true);
+        m_playerAnimator.SetBool("Attacking", true);
 
         yield return new WaitForSeconds(attackAnimation.length);
 
-        m_movementAnimator.SetBool("Attacking", false);
+        m_playerAnimator.SetBool("Attacking", false);
 
     }
 
     public void Falling(bool status)
     {
-        if (m_movementAnimator.GetBool("Jump"))
+        if (m_playerAnimator.GetBool("Jump"))
         {
-            m_movementAnimator.SetBool("IsFalling", status);
+            m_playerAnimator.SetBool("IsFalling", status);
         }
         else
         {
-            m_movementAnimator.SetBool("IsFalling", false);
+            m_playerAnimator.SetBool("IsFalling", false);
         }
     }
 }
