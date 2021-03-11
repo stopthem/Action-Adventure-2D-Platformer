@@ -82,9 +82,11 @@ public class EnemyAnimation : MonoBehaviour
     public IEnumerator TakeHitRoutine()
     {
         TakeHit(true);
+        Walking(false);
 
         yield return new WaitForSeconds(takeHitAnimation.length);
-
+        
         TakeHit(false);
+        Walking(true);
     }
 }

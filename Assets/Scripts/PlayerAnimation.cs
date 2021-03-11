@@ -12,7 +12,7 @@ public class PlayerAnimation : MonoBehaviour
 
     private void Awake()
     {
-        m_playerAnimator = GetComponentInChildren<Animator>();
+        m_playerAnimator = GetComponent<Animator>();
         m_playerController = GetComponent<PlayerController>();
     }
 

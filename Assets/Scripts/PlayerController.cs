@@ -97,7 +97,6 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     }
 
-    // handles physics
     private void FixedUpdate()
     {
         m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
