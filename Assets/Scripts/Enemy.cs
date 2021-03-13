@@ -421,7 +421,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
     }
 
-    public void Killed()
+    public virtual void Killed()
     {
         m_enemyAnimation.DeathAnim();
 
@@ -434,7 +434,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         DisableColliders();
     }
 
-    protected virtual void DisableColliders()
+    protected void DisableColliders()
     {
         theRB2D.isKinematic = true;
         foreach (var collider in colliders)

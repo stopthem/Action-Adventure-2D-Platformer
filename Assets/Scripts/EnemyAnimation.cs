@@ -79,6 +79,11 @@ public class EnemyAnimation : MonoBehaviour
         m_enemyAnimator.SetBool("TakeHit", status);
     }
 
+    public void Reborn(bool status)
+    {
+        m_enemyAnimator.SetBool("Reborn", status);
+    }
+
     public IEnumerator TakeHitAnimRoutine()
     {
         m_enemy.isTakingHit = true;
