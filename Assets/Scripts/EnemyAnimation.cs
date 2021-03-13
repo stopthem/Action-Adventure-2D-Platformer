@@ -18,29 +18,76 @@ public class EnemyAnimation : MonoBehaviour
         m_enemyAnimator = GetComponent<Animator>();
     }
 
-    public bool GetBool(string s)
+    private void Update()
     {
-        return m_enemyAnimator.GetBool(s);
+        if (HasParameter("TakeHit", m_enemyAnimator))
+        {
+            TakeHit(m_enemy.isTakingHit);
+        }
+        if (HasParameter("Walking", m_enemyAnimator))
+        {
+            Walking(m_enemy.isWalking);
+        }
+        if (HasParameter("Attacking", m_enemyAnimator))
+        {
+            Attacking(m_enemy.isAttacking);
+        }
+        if (HasParameter("Idle", m_enemyAnimator))
+        {
+            Idle(m_enemy.isIdle);
+        }
     }
 
-    public void Idle(bool status)
+    public static bool HasParameter(string paramName, Animator animator)
+    {
+        foreach (AnimatorControllerParameter param in animator.parameters)
+        {
+            if (param.name == paramName) return true;
+        }
+        return false;
+    }
+
+    private void Idle(bool status)
     {
         m_enemyAnimator.SetBool("Idle", status);
     }
 
-    public void Walking(bool status)
+    private void Walking(bool status)
     {
         m_enemyAnimator.SetBool("Walking", status);
     }
 
-    public void Attacking(bool status)
+    private void Attacking(bool status)
     {
         m_enemyAnimator.SetBool("Attacking", status);
     }
 
-    public void TakeHit(bool status)
+    public IEnumerator AttackAnimationRoutine()
+    {
+        m_enemy.isWalking = false;
+        m_enemy.isAttacking = true;
+
+        yield return new WaitForSeconds(attackAnimation.length);
+
+        m_enemy.isAttacking = false;
+        m_enemy.isWalking = true;
+
+    }
+
+    private void TakeHit(bool status)
     {
         m_enemyAnimator.SetBool("TakeHit", status);
+    }
+
+    public IEnumerator TakeHitAnimRoutine()
+    {
+        m_enemy.isTakingHit = true;
+        m_enemy.isWalking = false;
+
+        yield return new WaitForSeconds(takeHitAnimation.length);
+
+        m_enemy.isTakingHit = false;
+        m_enemy.isWalking = true;
     }
 
     public void DeathAnim()
@@ -55,38 +102,15 @@ public class EnemyAnimation : MonoBehaviour
         }
     }
 
-    public IEnumerator AttackAnimationRoutine()
+    public IEnumerator WaypointAnimRoutine()
     {
-        Walking(false);
-        Attacking(true);
-        
-        yield return new WaitForSeconds(attackAnimation.length);
-        
-        Attacking(false);
-        Walking(true);
-
-    }
-
-    public IEnumerator WaypointRoutine()
-    {
-        Idle(true);
-        Walking(false);
+        m_enemy.isIdle = true;
+        m_enemy.isWalking = false;
 
         yield return new WaitForSeconds(idleAnimation.length);
 
-        Idle(false);
-        Walking(true);
+        m_enemy.isIdle = false;
+        m_enemy.isWalking = true;
 
-    }
-
-    public IEnumerator TakeHitRoutine()
-    {
-        TakeHit(true);
-        Walking(false);
-
-        yield return new WaitForSeconds(takeHitAnimation.length);
-        
-        TakeHit(false);
-        Walking(true);
     }
 }

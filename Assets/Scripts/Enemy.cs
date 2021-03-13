@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,12 +23,17 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     protected float m_horizontalMove;
     [SerializeField] protected float enemyDamage;
     [SerializeField] protected float enemyRange;
+    protected float iteration;
 
     protected bool canMove = true;
     protected bool targetIsPlayer;
     [HideInInspector] public bool isDead;
     protected bool canDamage;
     protected bool m_canKnockBack;
+    [HideInInspector] public bool isTakingHit;
+    [HideInInspector] public bool isAttacking;
+    [HideInInspector] public bool isWalking;
+    [HideInInspector] public bool isIdle;
 
     [Header("Knockback")]
     public bool canKnockBack;
@@ -49,12 +54,15 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     [SerializeField] protected LayerMask playerLayer;
 
     protected Vector3 target;
-    protected Vector2 moveDirection;
-    protected Vector2 oldTarget;
+    protected Vector3 moveDirection;
+    protected Vector3 oldTarget;
     protected float distanceToA;
     protected float distanceToB;
 
     protected SpriteRenderer enemySprite;
+    protected Collider2D[] colliders;
+
+    public GameObject bloodAnimation;
 
     protected virtual void Awake()
     {
@@ -71,6 +79,8 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         playerTransform = GameObject.FindWithTag("Player").GetComponent<Transform>();
 
         m_playerController = GameObject.FindWithTag("Player").GetComponent<PlayerController>();
+
+        colliders = GetComponents<Collider2D>();
     }
 
     private void Start()
@@ -92,13 +102,13 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             if (playerTransform.position.x < transform.position.x && !isDead)
             {
                 StartCoroutine(KnockbackRoutine(knockbackPower));
-                m_canKnockBack = false;
             }
             if (playerTransform.position.x > transform.position.x && !isDead)
             {
                 StartCoroutine(KnockbackRoutine(-knockbackPower));
-                m_canKnockBack = false;
             }
+
+            theRB2D.velocity = new Vector2(m_horizontalMove, theRB2D.velocity.y);
         }
     }
 
@@ -106,14 +116,16 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     {
         m_horizontalMove = power;
 
-        yield return new WaitForSeconds(.2f);
-        m_horizontalMove = power / 2;
+        yield return new WaitForSeconds(.1f);
+        m_horizontalMove = m_horizontalMove / 2;
 
         yield return new WaitForSeconds(.2f);
-        m_horizontalMove = power / 5;
+        m_horizontalMove = m_horizontalMove / 5;
 
-        yield return new WaitForSeconds(.2f);
+        yield return new WaitForSeconds(.3f);
         m_horizontalMove = 0;
+
+        m_canKnockBack = false;
     }
 
     protected virtual void Attack()
@@ -161,12 +173,13 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
                 HandleAggroMovement();
             }
 
-            if (!m_enemyAnimation.GetBool("Walking"))
+            if (isAttacking)
             {
-                moveDirection = Vector2.zero;
+                theRB2D.velocity = Vector2.zero;
+                moveDirection = Vector3.zero;
+                isWalking = false;
             }
-
-            if (targetIsPlayer && isAggroMovement)
+            if (targetIsPlayer && isAggroMovement && !isAttacking && !isTakingHit)
             {
                 theRB2D.velocity = new Vector2(m_horizontalMove * speed, theRB2D.velocity.y);
             }
@@ -198,7 +211,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         if (distanceToPlayer <= rangeToAggro && !m_playerController.isDead)
         {
 
-            if (!m_enemyAnimation.GetBool("Attacking"))
+            if (!isAttacking)
             {
                 if (playerTransform.position.x < transform.position.x)
                 {
@@ -210,9 +223,9 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
                 }
             }
 
-            if (canMove && !m_enemyAnimation.GetBool("Attacking"))
+            if (canMove && !isAttacking && !isTakingHit)
             {
-                m_enemyAnimation.Walking(true);
+                isWalking = true;
                 targetIsPlayer = true;
 
                 if (isWaypointMovement)
@@ -231,7 +244,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         {
             if (isAggroMovement && !isWaypointMovement)
             {
-                m_enemyAnimation.Walking(false);
+                isWalking = false;
             }
 
             if (isWaypointMovement || m_playerController.isDead)
@@ -240,57 +253,81 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             }
         }
 
-        if (distanceToPlayer <= rangeToAttack && !m_playerController.isDead)
+        if (distanceToPlayer <= rangeToAttack && !m_playerController.isDead && !isAttacking && !isTakingHit)
         {
-            if (!m_enemyAnimation.GetBool("Attacking"))
+            m_horizontalMove = 0;
+            Attack();
+        }
+        // else if (m_playerController.isDead && isAggroMovement && !isWaypointMovement)
+        // {
+        //     isWalking = false;
+        // }
+
+        if (!isAttacking && !m_playerController.isDead && isWalking && !isTakingHit)
+        {
+            isIdle = false;
+
+            if (playerTransform.position.x < transform.position.x)
             {
-                m_horizontalMove = 0;
-                Attack();
+                m_horizontalMove = -speed;
+            }
+            if (playerTransform.position.x > transform.position.x)
+            {
+                m_horizontalMove = speed;
             }
         }
-        else if (m_playerController.isDead && isAggroMovement && !isWaypointMovement)
+        else if (!isWaypointMovement || targetIsPlayer)
         {
-            m_enemyAnimation.Walking(false);
-        }
+            isIdle = false;
 
-        if (!m_enemyAnimation.GetBool("Attacking") && isAggroMovement && !isWaypointMovement || targetIsPlayer && !m_playerController.isDead)
-        {
-            if (m_enemyAnimation.GetBool("Walking"))
+            if (playerTransform.position.x < transform.position.x)
             {
-                if (playerTransform.position.x < transform.position.x)
-                {
-                    m_horizontalMove = -speed;
-                }
-                if (playerTransform.position.x > transform.position.x)
-                {
-                    m_horizontalMove = speed;
-                }
+                m_horizontalMove = -speed;
+            }
+            if (playerTransform.position.x > transform.position.x)
+            {
+                m_horizontalMove = speed;
             }
         }
     }
 
     private void HandleWaypointMovement()
     {
-        if (m_enemyAnimation.GetBool("Idle") && canMove)
-        {
-            StartCoroutine(m_enemyAnimation.WaypointRoutine());
-        }
 
         distanceToA = Vector2.Distance(transform.position, pointA.position);
         distanceToB = Vector2.Distance(transform.position, pointB.position);
 
         if (distanceToA < 0.5f && !targetIsPlayer)
         {
-
             target = pointB.position;
             oldTarget = target;
-            m_enemyAnimation.Idle(true);
+
+            while (iteration == 0)
+            {
+                if (canMove)
+                {
+                    StartCoroutine(m_enemyAnimation.WaypointAnimRoutine());
+                    iteration++;
+                }
+            }
         }
         else if (distanceToB < 0.5f && !targetIsPlayer)
         {
             target = pointA.position;
             oldTarget = target;
-            m_enemyAnimation.Idle(true);
+
+            while (iteration == 0)
+            {
+                if (canMove)
+                {
+                    StartCoroutine(m_enemyAnimation.WaypointAnimRoutine());
+                    iteration++;
+                }
+            }
+        }
+        else
+        {
+            iteration = 0;
         }
         // when player lefts aggro we use last target before player.
         if (Vector2.Distance(target, transform.position) < 1f || distanceToA < distanceToPlayer && distanceToB < distanceToPlayer)
@@ -298,7 +335,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             target = oldTarget;
         }
 
-        if (m_enemyAnimation.GetBool("Walking") && !m_enemyAnimation.GetBool("TakeHit"))
+        if (isWalking && !isTakingHit)
         {
             moveDirection = target - transform.position;
         }
@@ -310,17 +347,17 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         if (other.gameObject.CompareTag("enemyWall"))
         {
             canMove = false;
-            m_enemyAnimation.Walking(false);
+            isWalking = false;
             if (isWaypointMovement)
             {
-                m_enemyAnimation.Idle(true);
+                isIdle = true;
 
                 if (!targetIsPlayer)
                 {
                     target = oldTarget;
                     canMove = true;
-                    m_enemyAnimation.Idle(false);
-                    m_enemyAnimation.Walking(true);
+                    isIdle = false;
+                    isWalking = true;
                 }
             }
         }
@@ -333,8 +370,8 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             canMove = true;
             if (isWaypointMovement)
             {
-                m_enemyAnimation.Idle(false);
-                m_enemyAnimation.Walking(true);
+                isIdle = false;
+                isWalking = true;
             }
         }
     }
@@ -348,6 +385,11 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     {
         currentHealth -= damageTaken;
 
+        if (bloodAnimation != null)
+        {
+            StartCoroutine(PlayBloodAnim());
+        }
+
         if (canKnockBack)
         {
             m_canKnockBack = true;
@@ -355,13 +397,27 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
         if (m_enemyAnimation.takeHitAnimation != null)
         {
-            StartCoroutine(m_enemyAnimation.TakeHitRoutine());
+            m_horizontalMove = 0;
+            moveDirection = Vector3.zero;
+            StartCoroutine(m_enemyAnimation.TakeHitAnimRoutine());
         }
 
         if (currentHealth <= 0)
         {
             Killed();
         }
+    }
+
+    private IEnumerator PlayBloodAnim()
+    {
+        bloodAnimation.SetActive(true);
+        Animator bloodAnimator = bloodAnimation.GetComponent<Animator>();
+        bloodAnimator.SetTrigger("Blood");
+
+        yield return new WaitForSeconds(.35f);
+
+        bloodAnimation.SetActive(false);
+
     }
 
     public void Killed()
@@ -373,5 +429,16 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         theRB2D.velocity = Vector2.zero;
 
         Destroy(gameObject, 5f);
+
+        DisableColliders();
+    }
+
+    protected virtual void DisableColliders()
+    {
+        theRB2D.isKinematic = true;
+        foreach (var collider in colliders)
+        {
+            collider.enabled = false;
+        }
     }
 }

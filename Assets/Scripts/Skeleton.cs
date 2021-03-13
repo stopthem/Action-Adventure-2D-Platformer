@@ -4,5 +4,4 @@ using UnityEngine;
 
 public class Skeleton : Enemy
 {
-    // maybe usable later.
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     private Transform m_playerTransform;
 
     private Vector2 m_moveInput;
+    public GameObject bloodAnimation;
 
     private int m_buttonUsed = 0;
 
@@ -30,7 +32,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     public float dashSpeed;
     public float dashCooldown;
 
-    [Header("Moving Atack")]            
+    [Header("Moving Atack")]
     public float speedAfterMovingAttack;
     public float movingAttackDamage;
 
@@ -38,20 +40,36 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     public float attackRange = .5f;
     public float damage;
     public float health;
+    public float knocbackPower;
+    public float invincibleDuration;
     private float m_currentHealth;
     private float m_originalGravity;
     private float m_direction;
     private float m_horizontalMove;
 
+    private int triggerIteration = 0;
+
     private bool m_grounded;
     private bool m_candamage;
     private bool canDash = true;
+    private bool m_canKnockBack;
+    private bool canTakeDamage = true;
+    [HideInInspector] public bool invincible;
     [HideInInspector] public bool isDead;
+    [HideInInspector] public bool isAttacking;
+    [HideInInspector] public bool isMoving;
+    [HideInInspector] public bool isMovingAttacking;
+    [HideInInspector] public bool isDashing;
+    [HideInInspector] public bool isJumping;
+    [HideInInspector] public bool isFalling;
 
     public Transform attackPoint;
     public LayerMask enemyLayer;
-
     [SerializeField] private LayerMask m_groundedLayer;
+
+    private CapsuleCollider2D capsuleCollider;
+
+    private SpriteRenderer spriteRenderer;
 
     // private Joystick joystick;
 
@@ -69,6 +87,10 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         m_boxCollider2D = GetComponent<BoxCollider2D>();
 
         m_enemy = GetComponent<Enemy>();
+
+        capsuleCollider = GetComponent<CapsuleCollider2D>();
+
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void Start()
@@ -81,7 +103,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         if (!isDead)
         {
-            if (!m_playerAnimation.GetBool("Attacking") && !m_playerAnimation.GetBool("MovingAttack"))
+            if (!isAttacking && !isMovingAttacking && !m_canKnockBack)
             {
                 MoveCharacter();
             }
@@ -92,16 +114,16 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         }
     }
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
-    }
-
     private void FixedUpdate()
     {
         m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
 
-        if (m_playerAnimation.GetBool("IsDashing"))
+        HandleDash();
+    }
+
+    private void HandleDash()
+    {
+        if (isDashing)
         {
             if (m_direction == 1)
             {
@@ -152,6 +174,14 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         m_moveInput.Normalize();
 
         m_horizontalMove = moveSpeed * m_moveInput.x;
+        if (m_horizontalMove > 0 || m_horizontalMove < 0)
+        {
+            isMoving = true;
+        }
+        else
+        {
+            isMoving = false;
+        }
 
         m_playerAnimation.Move(Mathf.Abs(m_moveInput.x));
 
@@ -163,13 +193,13 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         canDash = false;
 
-        m_playerAnimation.Dash(true);
+        isDashing = true;
 
         m_rigidBody.gravityScale = 0;
 
         yield return new WaitForSeconds(dashDuration);
 
-        m_playerAnimation.Dash(false);
+        isDashing = false;
 
         m_rigidBody.gravityScale = m_originalGravity;
 
@@ -234,19 +264,19 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         if (hitInfo.collider != null)
         {
             m_grounded = true;
-            m_playerAnimation.Jump(false);
-            m_playerAnimation.Falling(false);
+            isJumping = false;
+            isFalling = false;
             m_buttonUsed = 0;
         }
         else
         {
             m_grounded = false;
-            m_playerAnimation.Jump(true);
+            isJumping = true;
         }
 
         if (m_rigidBody.velocity.y < 0)
         {
-            m_playerAnimation.Falling(true);
+            isFalling = true;
         }
     }
 
@@ -267,7 +297,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             StartCoroutine(AttackRoutine());
         }
         // moving attack
-        if (m_playerAnimation.GetBool("Moving") && Input.GetKeyDown(KeyCode.Space))
+        if (isMoving && Input.GetKeyDown(KeyCode.Space))
         {
             if (m_direction == 1)
             {
@@ -278,9 +308,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                 m_horizontalMove = speedAfterMovingAttack;
             }
 
-            m_playerAnimation.MovingAttack(true);
-
-
+            isMovingAttacking = true;
 
             StartCoroutine(AttackRoutine());
         }
@@ -288,7 +316,8 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private IEnumerator AttackRoutine()
     {
-        if (m_playerAnimation.GetBool("MovingAttack"))
+
+        if (isMovingAttacking)
         {
             m_playerAnimation.MovingAttackAnim();
             yield return new WaitForSeconds(.5f);
@@ -296,7 +325,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         }
         else
         {
-            m_playerAnimation.Attack();
+            m_playerAnimation.AttackAnim();
         }
 
         // waits untill specific attack animation frame
@@ -307,11 +336,11 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
 
-        if (hitEnemies != null && m_candamage && m_playerAnimation.GetBool("Attacking") || m_playerAnimation.GetBool("MovingAttack"))
+        if (hitEnemies != null && m_candamage && isAttacking || isMovingAttacking)
         {
             foreach (var enemy in hitEnemies)
             {
-                if (m_playerAnimation.GetBool("MovingAttack"))
+                if (isMovingAttacking)
                 {
                     enemy.gameObject.GetComponent<Enemy>().Damage(movingAttackDamage);
                 }
@@ -321,7 +350,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                 }
             }
             // waits for second spesific animation frame and damages twice
-            if (!m_playerAnimation.GetBool("MovingAttack"))
+            if (!isMovingAttacking)
             {
                 m_candamage = false;
 
@@ -329,6 +358,8 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                 {
                     yield return null;
                 }
+
+                hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
 
                 if (m_candamage && hitEnemies != null)
                 {
@@ -356,18 +387,96 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     public void Damage(float damageTaken)
     {
-        m_currentHealth -= damageTaken;
-        m_playerAnimation.TakeHit();
-
-        if (m_currentHealth <= 0)
+        if (canTakeDamage)
         {
-            Killed();
+            m_currentHealth -= damageTaken;
+            StartCoroutine(Invincible(invincibleDuration));
+
+            StartCoroutine(PlayBloodAnim());
+
+            m_playerAnimation.TakeHit();
+
+            if (m_currentHealth <= 0)
+            {
+                Killed();
+            }
         }
+    }
+
+    private IEnumerator Invincible(float duration)
+    {
+        Physics2D.IgnoreLayerCollision(11, 10, true);
+        invincible = true;
+        canTakeDamage = false;
+        
+
+        yield return new WaitForSeconds(duration);
+
+        canTakeDamage = true;
+        invincible = false;
+        capsuleCollider.enabled = true;
+        Physics2D.IgnoreLayerCollision(11, 10, false);
+    }
+
+    private IEnumerator PlayBloodAnim()
+    {
+        bloodAnimation.SetActive(true);
+        Animator bloodAnimator = bloodAnimation.GetComponent<Animator>();
+        bloodAnimator.SetTrigger("Blood");
+
+        yield return new WaitForSeconds(.2f);
+
+        bloodAnimation.SetActive(false);
     }
 
     public void Killed()
     {
         m_playerAnimation.DeathAnimation();
         isDead = true;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!invincible)
+        {
+            if (other.gameObject.CompareTag("Enemy") || m_canKnockBack)
+            {
+                isMoving = false;
+                while (triggerIteration == 0)
+                {
+                    m_canKnockBack = true;
+
+                    Damage(1);
+
+                    if (m_direction == 1)
+                    {
+                        StartCoroutine(KnockbackRoutine(knocbackPower));
+                    }
+                    else if (m_direction == 2)
+                    {
+                        StartCoroutine(KnockbackRoutine(-knocbackPower));
+                    }
+                    triggerIteration++;
+                }
+
+            }
+        }
+    }
+
+    private IEnumerator KnockbackRoutine(float power)
+    {
+        m_horizontalMove = power;
+
+        yield return new WaitForSeconds(.1f);
+        m_horizontalMove = power / 2;
+
+        yield return new WaitForSeconds(.2f);
+        m_horizontalMove = power / 5;
+
+        yield return new WaitForSeconds(.2f);
+        m_horizontalMove = 0;
+
+        m_canKnockBack = false;
+        triggerIteration = 0;
     }
 }

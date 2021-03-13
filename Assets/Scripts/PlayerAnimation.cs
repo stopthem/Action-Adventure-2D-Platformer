@@ -9,6 +9,7 @@ public class PlayerAnimation : MonoBehaviour
 
     public AnimationClip attackAnimation;
     public AnimationClip dashAttackAnimation;
+    public AnimationClip takehitAnimation;
 
     private void Awake()
     {
@@ -16,25 +17,56 @@ public class PlayerAnimation : MonoBehaviour
         m_playerController = GetComponent<PlayerController>();
     }
 
-    public bool GetBool(string s)
+    private void Update()
     {
-        return m_playerAnimator.GetBool(s);
+        if (HasParameter("Moving", m_playerAnimator))
+        {
+            Moving(m_playerController.isMoving);
+        }
+        if (HasParameter("Attacking", m_playerAnimator))
+        {
+            Attacking(m_playerController.isAttacking);
+        }
+        if (HasParameter("MovingAttack", m_playerAnimator))
+        {
+            MovingAttack(m_playerController.isMovingAttacking);
+        }
+        if (HasParameter("IsDashing", m_playerAnimator))
+        {
+            Dash(m_playerController.isDashing);
+        }
+        if (HasParameter("IsFalling", m_playerAnimator))
+        {
+            Falling(m_playerController.isFalling);
+        }
+        if (HasParameter("Jump", m_playerAnimator))
+        {
+            Jump(m_playerController.isJumping);
+        }
+        if (HasParameter("IsInvincible", m_playerAnimator))
+        {
+            IsInvincible(m_playerController.invincible);
+        }
     }
 
-    public float GetFloat(string f)
+    public static bool HasParameter(string paramName, Animator animator)
     {
-        return m_playerAnimator.GetFloat(f);
+        foreach (AnimatorControllerParameter param in animator.parameters)
+        {
+            if (param.name == paramName) return true;
+        }
+        return false;
     }
 
     public void Move(float move)
     {
         if (move > 0)
         {
-            m_playerAnimator.SetBool("Moving", true);
+            m_playerController.isMoving = true;
         }
         else
         {
-            m_playerAnimator.SetBool("Moving", false);
+            m_playerController.isMoving = false;
         }
     }
 
@@ -55,20 +87,50 @@ public class PlayerAnimation : MonoBehaviour
     {
         m_playerAnimator.SetBool("IsDashing", state);
     }
+    private void IsInvincible(bool state)
+    {
+        if (!m_playerController.isDead)
+        {
+            m_playerAnimator.SetBool("IsInvincible", state);
+        }
+    }
 
     public void TakeHit()
     {
         if (!m_playerController.isDead)
         {
-            m_playerAnimator.SetTrigger("TakeHit");
+            StartCoroutine(TakeHitAnimRoutine());
         }
     }
 
-    public void MovingAttack(bool state)
+    private IEnumerator TakeHitAnimRoutine()
+    {
+        m_playerAnimator.SetTrigger("TakeHit");
+        yield return new WaitForSeconds(takehitAnimation.length);
+    }
+
+    private void Attacking(bool state)
     {
         if (!m_playerController.isDead)
         {
-            m_playerAnimator.SetBool("MovingAttack", true);
+            m_playerAnimator.SetBool("Attacking", state);
+        }
+    }
+
+    private IEnumerator AttackAnimRoutine()
+    {
+        m_playerController.isAttacking = true;
+
+        yield return new WaitForSeconds(attackAnimation.length);
+
+        m_playerController.isAttacking = false;
+    }
+
+    private void MovingAttack(bool state)
+    {
+        if (!m_playerController.isDead)
+        {
+            m_playerAnimator.SetBool("MovingAttack", state);
         }
     }
 
@@ -83,7 +145,7 @@ public class PlayerAnimation : MonoBehaviour
     private IEnumerator MovingAttackRoutine()
     {
         yield return new WaitForSeconds(dashAttackAnimation.length);
-        m_playerAnimator.SetBool("MovingAttack", false);
+        m_playerController.isMovingAttacking = false;
     }
 
     public void DeathAnimation()
@@ -94,9 +156,9 @@ public class PlayerAnimation : MonoBehaviour
         }
     }
 
-    public void Attack()
+    public void AttackAnim()
     {
-        if (m_playerAnimator.GetBool("Attacking") || m_playerAnimator.GetBool("Moving"))
+        if (m_playerController.isAttacking || m_playerController.isMoving)
         {
             return;
         }
@@ -106,19 +168,9 @@ public class PlayerAnimation : MonoBehaviour
         }
     }
 
-    private IEnumerator AttackAnimRoutine()
-    {
-        m_playerAnimator.SetBool("Attacking", true);
-
-        yield return new WaitForSeconds(attackAnimation.length);
-
-        m_playerAnimator.SetBool("Attacking", false);
-
-    }
-
     public void Falling(bool status)
     {
-        if (m_playerAnimator.GetBool("Jump"))
+        if (m_playerController.isJumping)
         {
             m_playerAnimator.SetBool("IsFalling", status);
         }
