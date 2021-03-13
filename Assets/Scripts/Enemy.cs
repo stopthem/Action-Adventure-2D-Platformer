@@ -119,11 +119,12 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         yield return new WaitForSeconds(.1f);
         m_horizontalMove = m_horizontalMove / 2;
 
-        yield return new WaitForSeconds(.2f);
+        yield return new WaitForSeconds(.1f);
         m_horizontalMove = m_horizontalMove / 5;
 
-        yield return new WaitForSeconds(.3f);
+        yield return new WaitForSeconds(.1f);
         m_horizontalMove = 0;
+        theRB2D.velocity = Vector2.zero;
 
         m_canKnockBack = false;
     }

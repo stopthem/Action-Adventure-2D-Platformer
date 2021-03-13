@@ -29,7 +29,7 @@ public class PlayerAnimation : MonoBehaviour
         }
         if (HasParameter("MovingAttack", m_playerAnimator))
         {
-            MovingAttack(m_playerController.isMovingAttacking);
+            DashAttack(m_playerController.isDashAttacking);
         }
         if (HasParameter("IsDashing", m_playerAnimator))
         {
@@ -126,7 +126,7 @@ public class PlayerAnimation : MonoBehaviour
         m_playerController.isAttacking = false;
     }
 
-    private void MovingAttack(bool state)
+    private void DashAttack(bool state)
     {
         if (!m_playerController.isDead)
         {
@@ -142,10 +142,10 @@ public class PlayerAnimation : MonoBehaviour
         }
     }
 
-    private IEnumerator MovingAttackRoutine()
+    public IEnumerator MovingAttackRoutine()
     {
         yield return new WaitForSeconds(dashAttackAnimation.length);
-        m_playerController.isMovingAttacking = false;
+        m_playerController.isDashAttacking = false;
     }
 
     public void DeathAnimation()

@@ -58,7 +58,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     [HideInInspector] public bool isDead;
     [HideInInspector] public bool isAttacking;
     [HideInInspector] public bool isMoving;
-    [HideInInspector] public bool isMovingAttacking;
+    [HideInInspector] public bool isDashAttacking;
     [HideInInspector] public bool isDashing;
     [HideInInspector] public bool isJumping;
     [HideInInspector] public bool isFalling;
@@ -73,7 +73,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     // private Joystick joystick;
 
-    private bool m_moveLeft = false, m_moveRight = false;
+    // private bool m_moveLeft = false, m_moveRight = false;
     private void Awake()
     {
         // joystick = FindObjectOfType<Joystick>();
@@ -103,7 +103,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         if (!isDead)
         {
-            if (!isAttacking && !isMovingAttacking && !m_canKnockBack)
+            if (!isAttacking && !isDashAttacking && !m_canKnockBack)
             {
                 MoveCharacter();
             }
@@ -195,7 +195,10 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         isDashing = true;
 
-        m_rigidBody.gravityScale = 0;
+        if (!m_grounded)
+        {
+            m_rigidBody.gravityScale = 0;
+        }
 
         yield return new WaitForSeconds(dashDuration);
 
@@ -228,26 +231,26 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         // }
 
         //instead of seperate buttons i used getaxisraw for the movement.
-        m_moveInput.x = Input.GetAxisRaw("Horizontal");
-        m_moveInput.Normalize();
+        // m_moveInput.x = Input.GetAxisRaw("Horizontal");
+        // m_moveInput.Normalize();
 
-        m_horizontalMove = moveSpeed * m_moveInput.x;
+        // m_horizontalMove = moveSpeed * m_moveInput.x;
     }
 
     private void HandleMobileMovement()
     {
-        if (m_moveLeft)
-        {
-            m_horizontalMove = -moveSpeed;
-        }
-        else if (m_moveRight)
-        {
-            m_horizontalMove = moveSpeed;
-        }
-        else
-        {
-            m_horizontalMove = 0;
-        }
+        // if (m_moveLeft)
+        // {
+        //     m_horizontalMove = -moveSpeed;
+        // }
+        // else if (m_moveRight)
+        // {
+        //     m_horizontalMove = moveSpeed;
+        // }
+        // else
+        // {
+        //     m_horizontalMove = 0;
+        // }
 
         // if (inputDetection.instance.isJoystickControlsForMobileEnabled)
         // {
@@ -292,12 +295,16 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private void HandleAttack()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && !isDashing)
         {
             StartCoroutine(AttackRoutine());
         }
+        if (isDashing && Input.GetKeyDown(KeyCode.Space))
+        {
+            isDashAttacking = true;
+        }
         // moving attack
-        if (isMoving && Input.GetKeyDown(KeyCode.Space))
+        if (isDashAttacking)
         {
             if (m_direction == 1)
             {
@@ -308,7 +315,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                 m_horizontalMove = speedAfterMovingAttack;
             }
 
-            isMovingAttacking = true;
+            isDashAttacking = true;
 
             StartCoroutine(AttackRoutine());
         }
@@ -316,12 +323,9 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private IEnumerator AttackRoutine()
     {
-
-        if (isMovingAttacking)
+        if (isDashAttacking)
         {
-            m_playerAnimation.MovingAttackAnim();
-            yield return new WaitForSeconds(.5f);
-
+            StartCoroutine(IsMovingAttackRoutine());
         }
         else
         {
@@ -336,11 +340,11 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
 
-        if (hitEnemies != null && m_candamage && isAttacking || isMovingAttacking)
+        if (hitEnemies != null && m_candamage && isAttacking || isDashAttacking)
         {
             foreach (var enemy in hitEnemies)
             {
-                if (isMovingAttacking)
+                if (isDashAttacking)
                 {
                     enemy.gameObject.GetComponent<Enemy>().Damage(movingAttackDamage);
                 }
@@ -350,7 +354,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                 }
             }
             // waits for second spesific animation frame and damages twice
-            if (!isMovingAttacking)
+            if (!isDashAttacking)
             {
                 m_candamage = false;
 
@@ -371,6 +375,14 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             }
         }
         m_candamage = false;
+    }
+
+    private IEnumerator IsMovingAttackRoutine()
+    {
+        capsuleCollider.enabled = false;
+        yield return m_playerAnimation.MovingAttackRoutine();
+        yield return new WaitForSeconds(.5f);
+        capsuleCollider.enabled = true;
     }
 
     //animation event for attack
@@ -408,7 +420,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         Physics2D.IgnoreLayerCollision(11, 10, true);
         invincible = true;
         canTakeDamage = false;
-        
+
 
         yield return new WaitForSeconds(duration);
 
@@ -437,6 +449,10 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (!capsuleCollider.isActiveAndEnabled)
+        {
+            return;
+        }
         if (!invincible)
         {
             if (other.gameObject.CompareTag("Enemy") || m_canKnockBack)
@@ -474,7 +490,6 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         m_horizontalMove = power / 5;
 
         yield return new WaitForSeconds(.2f);
-        m_horizontalMove = 0;
 
         m_canKnockBack = false;
         triggerIteration = 0;
