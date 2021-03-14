@@ -45,15 +45,17 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     private float m_currentHealth;
     private float m_originalGravity;
     private float m_direction;
+    private float m_knockbackDirection;
     private float m_horizontalMove;
 
-    private int triggerIteration = 0;
+    private int m_triggerIteration = 0;
 
     private bool m_grounded;
     private bool m_candamage;
-    private bool canDash = true;
-    private bool canTakeDamage = true;
-    private bool poisonedDamage;
+    private bool m_canDash = true;
+    private bool m_canTakeDamage = true;
+    private bool m_poisonedDamage;
+    private bool m_canKnockBack;
     [HideInInspector] public bool invincible;
     [HideInInspector] public bool isDead;
     [HideInInspector] public bool isAttacking;
@@ -66,11 +68,11 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     [SerializeField] private Transform attackPoint;
     [SerializeField] private LayerMask enemyLayer;
-    [SerializeField] private LayerMask m_groundedLayer;
+    [SerializeField] private LayerMask groundedLayer;
 
-    private CapsuleCollider2D capsuleCollider;
+    private CapsuleCollider2D m_capsuleCollider;
 
-    private SpriteRenderer spriteRenderer;
+    private SpriteRenderer m_spriteRenderer;
 
     // private Joystick joystick;
 
@@ -89,9 +91,9 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         m_enemy = GetComponent<Enemy>();
 
-        capsuleCollider = GetComponent<CapsuleCollider2D>();
+        m_capsuleCollider = GetComponent<CapsuleCollider2D>();
 
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        m_spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void Start()
@@ -104,7 +106,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         if (!isDead)
         {
-            if (!isAttacking && !isDashAttacking)
+            if (!isAttacking && !isDashAttacking && !m_canKnockBack)
             {
                 MoveCharacter();
             }
@@ -132,20 +134,17 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                 isPoisoned = false;
                 break;
             }
-            poisonedDamage = true;
+            m_poisonedDamage = true;
             Damage(.5f);
             yield return new WaitForSeconds(perTick);
-            poisonedDamage = false;
+            m_poisonedDamage = false;
         }
         isPoisoned = false;
     }
 
     private void FixedUpdate()
     {
-        if (!isAttacking)
-        {
-            m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
-        }
+        m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
 
         HandleDash();
     }
@@ -194,7 +193,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             JumpButton();
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftControl) && canDash)
+        if (Input.GetKeyDown(KeyCode.LeftControl) && m_canDash)
         {
             StartCoroutine(DashRoutine());
         }
@@ -203,7 +202,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         m_moveInput.Normalize();
 
         m_horizontalMove = moveSpeed * m_moveInput.x;
-        if (m_moveInput.x > 0)
+        if (m_horizontalMove > 0 || m_horizontalMove < 0)
         {
             if (!isDead)
             {
@@ -223,7 +222,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private IEnumerator DashRoutine()
     {
-        canDash = false;
+        m_canDash = false;
 
         isDashing = true;
 
@@ -240,7 +239,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         yield return new WaitForSeconds(dashCooldown);
 
-        canDash = true;
+        m_canDash = true;
     }
 
     private void HandleDirection()
@@ -292,7 +291,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private void IsGrounded()
     {
-        RaycastHit2D hitInfo = Physics2D.BoxCast(m_boxCollider2D.bounds.center, m_boxCollider2D.bounds.size, 0f, Vector2.down, .3f, m_groundedLayer.value);
+        RaycastHit2D hitInfo = Physics2D.BoxCast(m_boxCollider2D.bounds.center, m_boxCollider2D.bounds.size, 0f, Vector2.down, .1f, groundedLayer.value);
         // Debug.DrawRay(m_boxCollider2D.bounds.center, Vector2.down * .5f, Color.green);
 
 
@@ -361,8 +360,8 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         }
         else
         {
-            m_horizontalMove = 0;
-            m_rigidBody.velocity = Vector2.zero;
+            // m_horizontalMove = 0;
+            // m_rigidBody.velocity = Vector2.zero;
             m_playerAnimation.AttackAnim();
         }
 
@@ -413,10 +412,10 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private IEnumerator IsMovingAttackRoutine()
     {
-        capsuleCollider.enabled = false;
+        m_capsuleCollider.enabled = false;
         yield return m_playerAnimation.MovingAttackRoutine();
         yield return new WaitForSeconds(.5f);
-        capsuleCollider.enabled = true;
+        m_capsuleCollider.enabled = true;
     }
 
     //animation event for attack
@@ -433,14 +432,71 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     public void Damage(float damageTaken)
     {
-        if (canTakeDamage)
+        if (m_canTakeDamage)
         {
             m_currentHealth -= damageTaken;
-            if (m_direction == 1 && !poisonedDamage)
+
+            if (m_canKnockBack == false)
+            {
+                m_canKnockBack = true;
+            }
+
+            if (m_direction == 1 && !m_poisonedDamage && m_canKnockBack)
             {
                 StartCoroutine(KnockbackRoutine(-knockBackPowerHit));
             }
-            else if (m_direction == 2 && !poisonedDamage)
+            else if (m_direction == 2 && !m_poisonedDamage && m_canKnockBack)
+            {
+                StartCoroutine(KnockbackRoutine(knockBackPowerHit));
+            }
+
+            if (!isPoisoned)
+            {
+                StartCoroutine(Invincible(invincibleDuration));
+            }
+
+            StartCoroutine(PlayBloodAnim());
+
+            if (!isPoisoned)
+            {
+                m_playerAnimation.TakeHit();
+            }
+
+            if (m_currentHealth <= 0)
+            {
+                Killed();
+            }
+        }
+    }
+
+    public void Damage(float damageTaken, Vector3 whoDamaged)
+    {
+        if (m_canTakeDamage)
+        {
+            m_currentHealth -= damageTaken;
+
+            if (whoDamaged != transform.position)
+            {
+                if (whoDamaged.x < transform.position.x)
+                {
+                    m_knockbackDirection = 1;   
+                }
+                else if (whoDamaged.x > transform.position.x)
+                {
+                    m_knockbackDirection = 2;   
+                }
+            }
+
+            if (m_canKnockBack == false)
+            {
+                m_canKnockBack = true;
+            }
+
+            if (m_knockbackDirection == 2 && !m_poisonedDamage && m_canKnockBack)
+            {
+                StartCoroutine(KnockbackRoutine(-knockBackPowerHit));
+            }
+            else if (m_knockbackDirection == 1 && !m_poisonedDamage && m_canKnockBack)
             {
                 StartCoroutine(KnockbackRoutine(knockBackPowerHit));
             }
@@ -468,14 +524,14 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         Physics2D.IgnoreLayerCollision(11, 10, true);
         invincible = true;
-        canTakeDamage = false;
+        m_canTakeDamage = false;
 
 
         yield return new WaitForSeconds(duration);
 
-        canTakeDamage = true;
+        m_canTakeDamage = true;
         invincible = false;
-        capsuleCollider.enabled = true;
+        m_capsuleCollider.enabled = true;
         Physics2D.IgnoreLayerCollision(11, 10, false);
     }
 
@@ -498,17 +554,22 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!capsuleCollider.isActiveAndEnabled)
+        if (!m_capsuleCollider.isActiveAndEnabled)
         {
             return;
         }
         if (!invincible)
         {
-            if (other.gameObject.CompareTag("Enemy"))
+            if (other.gameObject.CompareTag("Enemy") || m_canKnockBack)
             {
                 isMoving = false;
-                while (triggerIteration == 0)
+                while (m_triggerIteration == 0)
                 {
+                    if (m_canKnockBack == false)
+                    {
+                        m_canKnockBack = true;
+                    }
+
                     Damage(1);
 
                     if (m_direction == 1)
@@ -519,7 +580,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                     {
                         StartCoroutine(KnockbackRoutine(-knockBackPowerCollide));
                     }
-                    triggerIteration++;
+                    m_triggerIteration++;
                 }
 
             }
@@ -538,6 +599,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         yield return new WaitForSeconds(.2f);
 
-        triggerIteration = 0;
+        m_canKnockBack = false;
+        m_triggerIteration = 0;
     }
 }

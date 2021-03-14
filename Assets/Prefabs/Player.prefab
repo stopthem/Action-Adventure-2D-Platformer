@@ -54,6 +54,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -191,7 +192,7 @@ MonoBehaviour:
   movingAttackDamage: 2
   moveSpeed: 5
   jumpSpeed: 6.5
-  attackRange: 0.9
+  attackRange: 0.65
   damage: 1
   health: 10
   knockBackPowerCollide: 5
@@ -210,7 +211,7 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 1024
-  m_groundedLayer:
+  groundedLayer:
     serializedVersion: 2
     m_Bits: 256
 --- !u!70 &122544685

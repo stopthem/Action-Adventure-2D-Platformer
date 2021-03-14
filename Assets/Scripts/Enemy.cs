@@ -150,7 +150,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         {
             foreach (var player in hitEnemies)
             {
-                player.gameObject.GetComponent<PlayerController>().Damage(enemyDamage);
+                player.gameObject.GetComponent<PlayerController>().Damage(enemyDamage, transform.position);
             }
         }
         canDamage = false;
@@ -441,5 +441,10 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         {
             collider.enabled = false;
         }
+    }
+
+    public void Damage(float damageTaken, Vector3 whoDamaged)
+    {
+        // not usable right now.
     }
 }
