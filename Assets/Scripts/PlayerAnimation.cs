@@ -7,6 +7,7 @@ public class PlayerAnimation : MonoBehaviour
     private Animator m_playerAnimator;
     private PlayerController m_playerController;
 
+    [Header("Animations")]
     public AnimationClip attackAnimation;
     public AnimationClip dashAttackAnimation;
     public AnimationClip takehitAnimation;
@@ -46,6 +47,10 @@ public class PlayerAnimation : MonoBehaviour
         if (HasParameter("IsInvincible", m_playerAnimator))
         {
             IsInvincible(m_playerController.invincible);
+        }
+        if (HasParameter("IsPoisoned", m_playerAnimator))
+        {
+            isPoisoned(m_playerController.isPoisoned);
         }
     }
 
@@ -92,6 +97,13 @@ public class PlayerAnimation : MonoBehaviour
         if (!m_playerController.isDead)
         {
             m_playerAnimator.SetBool("IsInvincible", state);
+        }
+    }
+    private void isPoisoned(bool state)
+    {
+        if (!m_playerController.isDead)
+        {
+            m_playerAnimator.SetBool("IsPoisoned", state);
         }
     }
 

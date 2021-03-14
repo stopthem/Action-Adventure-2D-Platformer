@@ -19,29 +19,29 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     private Transform m_playerTransform;
 
     private Vector2 m_moveInput;
-    public GameObject bloodAnimation;
+    [SerializeField] private GameObject bloodAnimation;
 
     private int m_buttonUsed = 0;
 
-    public float moveSpeed;
-    public float jumpSpeed;
-
     [Header("Dash")]
-    public float dashDuration;
-    public float dashLength;
-    public float dashSpeed;
-    public float dashCooldown;
+    [SerializeField] private float dashDuration;
+    [SerializeField] private float dashLength;
+    [SerializeField] private float dashSpeed;
+    [SerializeField] private float dashCooldown;
 
     [Header("Moving Atack")]
-    public float speedAfterMovingAttack;
-    public float movingAttackDamage;
+    [SerializeField] private float speedAfterMovingAttack;
+    [SerializeField] private float movingAttackDamage;
 
     [Header("General")]
-    public float attackRange = .5f;
-    public float damage;
-    public float health;
-    public float knocbackPower;
-    public float invincibleDuration;
+    [SerializeField] private float moveSpeed;
+    [SerializeField] private float jumpSpeed;
+    [SerializeField] private float attackRange = .5f;
+    [SerializeField] private float damage;
+    [SerializeField] private float health;
+    [SerializeField] private float knockBackPowerCollide;
+    [SerializeField] private float knockBackPowerHit;
+    [SerializeField] private float invincibleDuration;
     private float m_currentHealth;
     private float m_originalGravity;
     private float m_direction;
@@ -52,8 +52,8 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     private bool m_grounded;
     private bool m_candamage;
     private bool canDash = true;
-    private bool m_canKnockBack;
     private bool canTakeDamage = true;
+    private bool poisonedDamage;
     [HideInInspector] public bool invincible;
     [HideInInspector] public bool isDead;
     [HideInInspector] public bool isAttacking;
@@ -62,9 +62,10 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     [HideInInspector] public bool isDashing;
     [HideInInspector] public bool isJumping;
     [HideInInspector] public bool isFalling;
+    [HideInInspector] public bool isPoisoned;
 
-    public Transform attackPoint;
-    public LayerMask enemyLayer;
+    [SerializeField] private Transform attackPoint;
+    [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private LayerMask m_groundedLayer;
 
     private CapsuleCollider2D capsuleCollider;
@@ -103,7 +104,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         if (!isDead)
         {
-            if (!isAttacking && !isDashAttacking && !m_canKnockBack)
+            if (!isAttacking && !isDashAttacking)
             {
                 MoveCharacter();
             }
@@ -112,11 +113,39 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             IsGrounded();
             GetPlayerDirection();
         }
+        else
+        {
+            isMoving = false;
+            m_horizontalMove = 0;
+            m_rigidBody.velocity = Vector2.zero;
+        }
+    }
+
+    public IEnumerator IsPoisonedRoutine(float perTick, float duration)
+    {
+        Damage(1);
+        float durationPerTick = duration / perTick;
+        for (int i = 1; i <= durationPerTick; i++)
+        {
+            if (isDead)
+            {
+                isPoisoned = false;
+                break;
+            }
+            poisonedDamage = true;
+            Damage(.5f);
+            yield return new WaitForSeconds(perTick);
+            poisonedDamage = false;
+        }
+        isPoisoned = false;
     }
 
     private void FixedUpdate()
     {
-        m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
+        if (!isAttacking)
+        {
+            m_rigidBody.velocity = new Vector2(m_horizontalMove, m_rigidBody.velocity.y);
+        }
 
         HandleDash();
     }
@@ -174,9 +203,12 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         m_moveInput.Normalize();
 
         m_horizontalMove = moveSpeed * m_moveInput.x;
-        if (m_horizontalMove > 0 || m_horizontalMove < 0)
+        if (m_moveInput.x > 0)
         {
-            isMoving = true;
+            if (!isDead)
+            {
+                isMoving = true;
+            }
         }
         else
         {
@@ -329,6 +361,8 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         }
         else
         {
+            m_horizontalMove = 0;
+            m_rigidBody.velocity = Vector2.zero;
             m_playerAnimation.AttackAnim();
         }
 
@@ -402,11 +436,26 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         if (canTakeDamage)
         {
             m_currentHealth -= damageTaken;
-            StartCoroutine(Invincible(invincibleDuration));
+            if (m_direction == 1 && !poisonedDamage)
+            {
+                StartCoroutine(KnockbackRoutine(-knockBackPowerHit));
+            }
+            else if (m_direction == 2 && !poisonedDamage)
+            {
+                StartCoroutine(KnockbackRoutine(knockBackPowerHit));
+            }
+
+            if (!isPoisoned)
+            {
+                StartCoroutine(Invincible(invincibleDuration));
+            }
 
             StartCoroutine(PlayBloodAnim());
 
-            m_playerAnimation.TakeHit();
+            if (!isPoisoned)
+            {
+                m_playerAnimation.TakeHit();
+            }
 
             if (m_currentHealth <= 0)
             {
@@ -455,22 +504,20 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         }
         if (!invincible)
         {
-            if (other.gameObject.CompareTag("Enemy") || m_canKnockBack)
+            if (other.gameObject.CompareTag("Enemy"))
             {
                 isMoving = false;
                 while (triggerIteration == 0)
                 {
-                    m_canKnockBack = true;
-
                     Damage(1);
 
                     if (m_direction == 1)
                     {
-                        StartCoroutine(KnockbackRoutine(knocbackPower));
+                        StartCoroutine(KnockbackRoutine(knockBackPowerCollide));
                     }
                     else if (m_direction == 2)
                     {
-                        StartCoroutine(KnockbackRoutine(-knocbackPower));
+                        StartCoroutine(KnockbackRoutine(-knockBackPowerCollide));
                     }
                     triggerIteration++;
                 }
@@ -491,7 +538,6 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         yield return new WaitForSeconds(.2f);
 
-        m_canKnockBack = false;
         triggerIteration = 0;
     }
 }

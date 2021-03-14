@@ -153,8 +153,8 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
                 player.gameObject.GetComponent<PlayerController>().Damage(enemyDamage);
             }
         }
-
         canDamage = false;
+        
 
     }
 
@@ -174,7 +174,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
                 HandleAggroMovement();
             }
 
-            if (isAttacking)
+            if (isAttacking || isDead)
             {
                 theRB2D.velocity = Vector2.zero;
                 moveDirection = Vector3.zero;

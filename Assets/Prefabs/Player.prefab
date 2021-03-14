@@ -183,27 +183,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bloodAnimation: {fileID: 2845744377423751748}
-  moveSpeed: 5
-  jumpSpeed: 6.5
   dashDuration: 0.2
   dashLength: 0.8
   dashSpeed: 15
   dashCooldown: 3
   speedAfterMovingAttack: 2.5
   movingAttackDamage: 2
+  moveSpeed: 5
+  jumpSpeed: 6.5
   attackRange: 0.9
   damage: 1
   health: 10
-  knocbackPower: 5
+  knockBackPowerCollide: 5
+  knockBackPowerHit: 2.5
   invincibleDuration: 3
   invincible: 0
   isDead: 0
   isAttacking: 0
   isMoving: 0
-  isMovingAttacking: 0
+  isDashAttacking: 0
   isDashing: 0
   isJumping: 0
   isFalling: 0
+  isPoisoned: 0
   attackPoint: {fileID: 2845744379180348461}
   enemyLayer:
     serializedVersion: 2
@@ -224,8 +226,8 @@ CapsuleCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.15719223, y: -0.15487945}
-  m_Size: {x: 0.26415253, y: 0.36858368}
+  m_Offset: {x: -0.15, y: -0.15487945}
+  m_Size: {x: 0.44, y: 0.36858368}
   m_Direction: 0
 --- !u!1 &2845744379180348460
 GameObject:
