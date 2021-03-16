@@ -436,7 +436,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         {
             m_currentHealth -= damageTaken;
 
-            if (m_canKnockBack == false)
+            if (m_canKnockBack == false && !m_poisonedDamage)
             {
                 m_canKnockBack = true;
             }
@@ -487,7 +487,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                 }
             }
 
-            if (m_canKnockBack == false)
+            if (m_canKnockBack == false && !m_poisonedDamage)
             {
                 m_canKnockBack = true;
             }
