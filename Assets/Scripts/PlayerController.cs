@@ -123,10 +123,12 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         }
     }
 
-    public IEnumerator IsPoisonedRoutine(float perTick, float duration)
+    public IEnumerator IsPoisonedRoutine(float perTick, float duration,Vector3 position,float damage)
     {
-        Damage(1);
+        Damage(damage,position);
+
         float durationPerTick = duration / perTick;
+
         for (int i = 1; i <= durationPerTick; i++)
         {
             if (isDead)
@@ -139,6 +141,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             yield return new WaitForSeconds(perTick);
             m_poisonedDamage = false;
         }
+        
         isPoisoned = false;
     }
 

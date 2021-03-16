@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2743671660409865923}
   - component: {fileID: 2743671660409865922}
   - component: {fileID: 2743671660409865949}
+  - component: {fileID: 658022661}
   m_Layer: 10
   m_Name: Spider
   m_TagString: Enemy
@@ -53,6 +54,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -140,16 +142,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d395a49aa9556e5489bc2bf2955016ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 2.25
+  speed: 1.9
   health: 4
   isWaypointMovement: 0
   pointA: {fileID: 0}
   pointB: {fileID: 0}
   isAggroMovement: 1
   rangeToAggro: 4
-  rangeToAttack: 0.5
+  rangeToAttack: 1
   enemyDamage: 1
-  enemyRange: 0.7
+  enemyRange: 0.65
   isDead: 0
   isTakingHit: 0
   isAttacking: 0
@@ -162,6 +164,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2048
   bloodAnimation: {fileID: 6137296716012663779}
+  poisonDuration: 2.5
+  poisonDurationPerTick: 0.5
 --- !u!70 &2743671660409865922
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -172,11 +176,11 @@ CapsuleCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.05, y: -0.05}
-  m_Size: {x: 0.2, y: 0.51}
+  m_Offset: {x: 0, y: -0.16087699}
+  m_Size: {x: 0.16184616, y: 0.21191978}
   m_Direction: 0
 --- !u!114 &2743671660409865949
 MonoBehaviour:
@@ -193,6 +197,32 @@ MonoBehaviour:
   attackAnimation: {fileID: 7400000, guid: 53e31ad3fc0faf643b38403605a71568, type: 2}
   idleAnimation: {fileID: 7400000, guid: 4ad2399484924e24cb63febbe2cd0193, type: 2}
   takeHitAnimation: {fileID: 0}
+--- !u!61 &658022661
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2743671660409865945}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.07749462, y: -0.17287257}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.46826744, y: 0.23936027}
+  m_EdgeRadius: 0
 --- !u!1 &2743671660823177502
 GameObject:
   m_ObjectHideFlags: 0

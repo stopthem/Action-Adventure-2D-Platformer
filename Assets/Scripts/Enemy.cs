@@ -23,7 +23,8 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     protected float m_horizontalMove;
     [SerializeField] protected float enemyDamage;
     [SerializeField] protected float enemyRange;
-    protected float iteration;
+    protected float waypointIteration;
+    protected float knockbackIteration;
 
     protected bool canMove = true;
     protected bool targetIsPlayer;
@@ -154,7 +155,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             }
         }
         canDamage = false;
-        
+
 
     }
 
@@ -178,6 +179,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             {
                 theRB2D.velocity = Vector2.zero;
                 moveDirection = Vector3.zero;
+                m_horizontalMove = 0;
                 isWalking = false;
             }
             if (targetIsPlayer && isAggroMovement && !isAttacking && !isTakingHit)
@@ -303,12 +305,12 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             target = pointB.position;
             oldTarget = target;
 
-            while (iteration == 0)
+            while (waypointIteration == 0)
             {
                 if (canMove)
                 {
                     StartCoroutine(m_enemyAnimation.WaypointAnimRoutine());
-                    iteration++;
+                    waypointIteration++;
                 }
             }
         }
@@ -317,18 +319,18 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             target = pointA.position;
             oldTarget = target;
 
-            while (iteration == 0)
+            while (waypointIteration == 0)
             {
                 if (canMove)
                 {
                     StartCoroutine(m_enemyAnimation.WaypointAnimRoutine());
-                    iteration++;
+                    waypointIteration++;
                 }
             }
         }
         else
         {
-            iteration = 0;
+            waypointIteration = 0;
         }
         // when player lefts aggro we use last target before player.
         if (Vector2.Distance(target, transform.position) < 1f || distanceToA < distanceToPlayer && distanceToB < distanceToPlayer)
@@ -384,6 +386,15 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
     public void Damage(float damageTaken)
     {
+        if (!m_playerController.isDashAttacking)
+        {
+            knockbackIteration++;
+        }
+        else
+        {
+            knockbackIteration = 2;
+        }
+
         currentHealth -= damageTaken;
 
         if (bloodAnimation != null)
@@ -391,8 +402,9 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             StartCoroutine(PlayBloodAnim());
         }
 
-        if (canKnockBack)
+        if (canKnockBack && knockbackIteration == 2)
         {
+            knockbackIteration = 0;
             m_canKnockBack = true;
         }
 

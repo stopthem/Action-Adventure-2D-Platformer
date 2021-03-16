@@ -7,6 +7,7 @@ public class Skeleton : Enemy
     [Header("Skeleton Spesific")]
     public float rebornTime;
 
+
     public override void Killed()
     {
         m_enemyAnimation.DeathAnim();

@@ -32,18 +32,13 @@ public class Spider : Enemy
                 if (!m_playerController.isPoisoned)
                 {
                     m_playerController.isPoisoned = true;
-                    yield return StartCoroutine(m_playerController.IsPoisonedRoutine(poisonDurationPerTick, poisonDuration));
+                    yield return StartCoroutine(m_playerController.IsPoisonedRoutine(poisonDurationPerTick, poisonDuration,transform.position, enemyDamage));
                 }
             }
         }
 
         canDamage = false;
 
-
-    }
-
-    private void Poison()
-    {
 
     }
 }
