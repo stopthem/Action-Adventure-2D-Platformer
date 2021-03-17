@@ -121,11 +121,12 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             m_horizontalMove = 0;
             m_rigidBody.velocity = Vector2.zero;
         }
+        print(m_currentHealth);
     }
 
-    public IEnumerator IsPoisonedRoutine(float perTick, float duration,Vector3 position,float damage)
+    public IEnumerator IsPoisonedRoutine(float perTick, float duration, Vector3 position, float damage)
     {
-        Damage(damage,position);
+        Damage(damage, position);
 
         float durationPerTick = duration / perTick;
 
@@ -138,10 +139,11 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             }
             m_poisonedDamage = true;
             Damage(.5f);
-            yield return new WaitForSeconds(perTick);
             m_poisonedDamage = false;
+            yield return new WaitForSeconds(perTick);
+
         }
-        
+
         isPoisoned = false;
     }
 
@@ -482,11 +484,11 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             {
                 if (whoDamaged.x < transform.position.x)
                 {
-                    m_knockbackDirection = 1;   
+                    m_knockbackDirection = 1;
                 }
                 else if (whoDamaged.x > transform.position.x)
                 {
-                    m_knockbackDirection = 2;   
+                    m_knockbackDirection = 2;
                 }
             }
 
