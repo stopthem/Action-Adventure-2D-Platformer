@@ -175,18 +175,18 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
                 HandleAggroMovement();
             }
 
-            if (isAttacking || isDead)
+            if (isAttacking || isDead || isIdle)
             {
                 theRB2D.velocity = Vector2.zero;
                 moveDirection = Vector3.zero;
                 m_horizontalMove = 0;
                 isWalking = false;
             }
-            if (targetIsPlayer && isAggroMovement && !isAttacking && !isTakingHit)
+            if (targetIsPlayer && isAggroMovement && !isAttacking && !isTakingHit && !isIdle)
             {
                 theRB2D.velocity = new Vector2(m_horizontalMove * speed, theRB2D.velocity.y);
             }
-            else if (!targetIsPlayer && isWaypointMovement)
+            else if (!targetIsPlayer && isWaypointMovement && !isIdle)
             {
                 moveDirection.Normalize();
                 theRB2D.velocity = moveDirection * speed;
@@ -305,6 +305,9 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             target = pointB.position;
             oldTarget = target;
 
+            m_horizontalMove = 0;
+            theRB2D.velocity = Vector2.zero;
+
             while (waypointIteration == 0)
             {
                 if (canMove)
@@ -318,6 +321,9 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         {
             target = pointA.position;
             oldTarget = target;
+            
+            m_horizontalMove = 0;
+            theRB2D.velocity = Vector2.zero;
 
             while (waypointIteration == 0)
             {
@@ -379,6 +385,7 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         }
     }
 
+    // animation event
     private void CanDamage()
     {
         canDamage = true;

@@ -121,7 +121,6 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             m_horizontalMove = 0;
             m_rigidBody.velocity = Vector2.zero;
         }
-        print(m_currentHealth);
     }
 
     public IEnumerator IsPoisonedRoutine(float perTick, float duration, Vector3 position, float damage)
@@ -335,7 +334,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         {
             StartCoroutine(AttackRoutine());
         }
-        if (isDashing && Input.GetKeyDown(KeyCode.Space))
+        if (isDashing && Input.GetKeyDown(KeyCode.Space) && m_grounded)
         {
             isDashAttacking = true;
         }
