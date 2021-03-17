@@ -31,7 +31,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     [Header("Moving Atack")]
     [SerializeField] private float speedAfterMovingAttack;
-    [SerializeField] private float movingAttackDamage;
+    [SerializeField] private float dashAttackDamage;
 
     [Header("General")]
     [SerializeField] private float moveSpeed;
@@ -117,6 +117,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
         }
         else
         {
+            isPoisoned = false;
             isMoving = false;
             m_horizontalMove = 0;
             m_rigidBody.velocity = Vector2.zero;
@@ -131,13 +132,14 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         for (int i = 1; i <= durationPerTick; i++)
         {
+
+            m_poisonedDamage = true;
+            Damage(.5f);
             if (isDead)
             {
                 isPoisoned = false;
                 break;
             }
-            m_poisonedDamage = true;
-            Damage(.5f);
             m_poisonedDamage = false;
             yield return new WaitForSeconds(perTick);
 
@@ -379,17 +381,19 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
         if (hitEnemies != null && m_candamage && isAttacking || isDashAttacking)
         {
-            foreach (var enemy in hitEnemies)
+            for (int i = 0; i < hitEnemies.Length; i++)
             {
                 if (isDashAttacking)
                 {
-                    enemy.gameObject.GetComponent<Enemy>().Damage(movingAttackDamage);
+                    hitEnemies[i].gameObject.GetComponent<Enemy>().Damage(dashAttackDamage);
                 }
                 else
                 {
-                    enemy.gameObject.GetComponent<Enemy>().Damage(damage);
+                    hitEnemies[i].gameObject.GetComponent<Enemy>().Damage(damage);
                 }
+
             }
+
             // waits for second spesific animation frame and damages twice
             if (!isDashAttacking)
             {
@@ -404,9 +408,9 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
                 if (m_candamage && hitEnemies != null)
                 {
-                    foreach (var enemy in hitEnemies)
+                    for (int i = 0; i < hitEnemies.Length; i++)
                     {
-                        enemy.gameObject.GetComponent<Enemy>().Damage(damage);
+                        hitEnemies[i].GetComponent<Enemy>().Damage(damage);
                     }
                 }
             }

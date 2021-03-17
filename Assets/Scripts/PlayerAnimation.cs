@@ -101,10 +101,7 @@ public class PlayerAnimation : MonoBehaviour
     }
     private void isPoisoned(bool state)
     {
-        if (!m_playerController.isDead)
-        {
-            m_playerAnimator.SetBool("IsPoisoned", state);
-        }
+        m_playerAnimator.SetBool("IsPoisoned", state);
     }
 
     public void TakeHit()

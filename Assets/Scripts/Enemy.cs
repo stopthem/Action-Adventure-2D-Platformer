@@ -149,14 +149,12 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
         if (hitEnemies != null && canDamage)
         {
-            foreach (var player in hitEnemies)
+            for (int i = 0; i < hitEnemies.Length; i++)
             {
-                player.gameObject.GetComponent<PlayerController>().Damage(enemyDamage, transform.position);
+                hitEnemies[i].gameObject.GetComponent<PlayerController>().Damage(enemyDamage, transform.position);
             }
         }
         canDamage = false;
-
-
     }
 
     private void HandleMovement()

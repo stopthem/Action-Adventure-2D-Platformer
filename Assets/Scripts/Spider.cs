@@ -27,7 +27,8 @@ public class Spider : Enemy
 
         if (hitEnemies != null && canDamage)
         {
-            foreach (var player in hitEnemies)
+
+            for (int i = 0; i < hitEnemies.Length; i++)
             {
                 if (!m_playerController.isPoisoned)
                 {
@@ -36,7 +37,7 @@ public class Spider : Enemy
                 }
                 else
                 {
-                    player.GetComponent<PlayerController>().Damage(enemyDamage,transform.position);
+                    hitEnemies[i].GetComponent<PlayerController>().Damage(enemyDamage,transform.position);
                 }
             }
         }
