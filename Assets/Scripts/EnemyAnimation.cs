@@ -5,6 +5,7 @@ using UnityEngine;
 public class EnemyAnimation : MonoBehaviour
 {
     private Enemy m_enemy;
+    private EnemyMovement m_enemyMovement;
     private Animator m_enemyAnimator;
 
     [Header("Animations")]
@@ -15,6 +16,7 @@ public class EnemyAnimation : MonoBehaviour
     private void Awake()
     {
         m_enemy = GetComponent<Enemy>();
+        m_enemyMovement = GetComponent<EnemyMovement>();
         m_enemyAnimator = GetComponent<Animator>();
     }
 
@@ -26,7 +28,7 @@ public class EnemyAnimation : MonoBehaviour
         }
         if (HasParameter("Walking", m_enemyAnimator))
         {
-            Walking(m_enemy.isWalking);
+            Walking(m_enemyMovement.isWalking);
         }
         if (HasParameter("Attacking", m_enemyAnimator))
         {
@@ -34,7 +36,7 @@ public class EnemyAnimation : MonoBehaviour
         }
         if (HasParameter("Idle", m_enemyAnimator))
         {
-            Idle(m_enemy.isIdle);
+            Idle(m_enemyMovement.isIdle);
         }
     }
 
@@ -64,13 +66,13 @@ public class EnemyAnimation : MonoBehaviour
 
     public IEnumerator AttackAnimationRoutine()
     {
-        m_enemy.isWalking = false;
+        m_enemyMovement.isWalking = false;
         m_enemy.isAttacking = true;
 
         yield return new WaitForSeconds(attackAnimation.length);
 
         m_enemy.isAttacking = false;
-        m_enemy.isWalking = true;
+        m_enemyMovement.isWalking = true;
 
     }
 
@@ -87,12 +89,12 @@ public class EnemyAnimation : MonoBehaviour
     public IEnumerator TakeHitAnimRoutine()
     {
         m_enemy.isTakingHit = true;
-        m_enemy.isWalking = false;
+        m_enemyMovement.isWalking = false;
 
         yield return new WaitForSeconds(takeHitAnimation.length);
 
         m_enemy.isTakingHit = false;
-        m_enemy.isWalking = true;
+        m_enemyMovement.isWalking = true;
     }
 
     public void DeathAnim()
@@ -109,13 +111,13 @@ public class EnemyAnimation : MonoBehaviour
 
     public IEnumerator WaypointAnimRoutine()
     {
-        m_enemy.isIdle = true;
-        m_enemy.isWalking = false;
+        m_enemyMovement.isIdle = true;
+        m_enemyMovement.isWalking = false;
 
         yield return new WaitForSeconds(idleAnimation.length);
 
-        m_enemy.isIdle = false;
-        m_enemy.isWalking = true;
+        m_enemyMovement.isIdle = false;
+        m_enemyMovement.isWalking = true;
 
     }
 }

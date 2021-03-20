@@ -5,79 +5,40 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 {
-    [Header("General")]
-    [SerializeField] protected float speed;
-    [SerializeField] protected float health;
-    protected float currentHealth;
-
-    [Header("Waypoint Movement")]
-    [SerializeField] protected bool isWaypointMovement;
-    [SerializeField] protected Transform pointA, pointB;
-
-    [Header("Aggro Movement")]
-    [SerializeField] protected bool isAggroMovement;
-    [SerializeField] protected float rangeToAggro;
-    [SerializeField] protected float rangeToAttack;
-
-    protected float distanceToPlayer;
-    protected float m_horizontalMove;
-    [SerializeField] protected float enemyDamage;
-    [SerializeField] protected float enemyRange;
-    protected float waypointIteration;
-    protected float knockbackIteration;
-
-    protected bool canMove = true;
-    protected bool targetIsPlayer;
-    [HideInInspector] public bool isDead;
-    protected bool canDamage;
-    protected bool m_canKnockBack;
-    [HideInInspector] public bool isTakingHit;
-    [HideInInspector] public bool isAttacking;
-    [HideInInspector] public bool isWalking;
-    [HideInInspector] public bool isIdle;
-
-    [Header("Knockback")]
-    public bool canKnockBack;
-    [SerializeField] protected float knockbackPower;
-
-
-    protected Rigidbody2D theRB2D;
-    protected SpriteRenderer spriteRenderer;
-
     protected EnemyAnimation m_enemyAnimation;
     protected PlayerController m_playerController;
+    protected EnemyMovement m_enemyMovement;
+    
+    [Header("General")]
+    [SerializeField] protected float health;
+    protected float currentHealth;
+    [SerializeField] protected float enemyDamage;
+    [SerializeField] protected float enemyRange;
+    protected float knockbackIteration;
 
-    protected Transform playerTransform;
-    protected Transform enemyTransform;
+    [HideInInspector] public bool isDead;
+    protected bool canDamage;
+    [HideInInspector] public bool didTakeDamage;
+    [HideInInspector] public bool isTakingHit;
+    [HideInInspector] public bool isAttacking;
+
+    protected Rigidbody2D theRB2D;
 
     [Header("Attacking")]
     [SerializeField] protected Transform hitPoint;
     [SerializeField] protected LayerMask playerLayer;
 
-    protected Vector3 target;
-    protected Vector3 moveDirection;
-    protected Vector3 oldTarget;
-    protected float distanceToA;
-    protected float distanceToB;
-
-    protected SpriteRenderer enemySprite;
     protected Collider2D[] colliders;
 
-    public GameObject bloodAnimation;
+    [SerializeField] private GameObject bloodAnimation;
 
-    protected virtual void Awake()
+    private void Awake()
     {
+        m_enemyMovement = GetComponent<EnemyMovement>();
+
         theRB2D = GetComponent<Rigidbody2D>();
 
-        enemyTransform = GetComponent<Transform>();
-
-        spriteRenderer = GetComponent<SpriteRenderer>();
-
-        enemySprite = GetComponent<SpriteRenderer>();
-
         m_enemyAnimation = GetComponent<EnemyAnimation>();
-
-        playerTransform = GameObject.FindWithTag("Player").GetComponent<Transform>();
 
         m_playerController = GameObject.FindWithTag("Player").GetComponent<PlayerController>();
 
@@ -89,48 +50,8 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         currentHealth = health;
     }
 
-    protected virtual void FixedUpdate()
-    {
-        HandleMovement();
-        HandleDirection();
-        HandleKnockBack();
-    }
 
-    private void HandleKnockBack()
-    {
-        if (m_canKnockBack)
-        {
-            if (playerTransform.position.x < transform.position.x && !isDead)
-            {
-                StartCoroutine(KnockbackRoutine(knockbackPower));
-            }
-            if (playerTransform.position.x > transform.position.x && !isDead)
-            {
-                StartCoroutine(KnockbackRoutine(-knockbackPower));
-            }
-
-            theRB2D.velocity = new Vector2(m_horizontalMove, theRB2D.velocity.y);
-        }
-    }
-
-    private IEnumerator KnockbackRoutine(float power)
-    {
-        m_horizontalMove = power;
-
-        yield return new WaitForSeconds(.1f);
-        m_horizontalMove = m_horizontalMove / 2;
-
-        yield return new WaitForSeconds(.1f);
-        m_horizontalMove = m_horizontalMove / 5;
-
-        yield return new WaitForSeconds(.1f);
-        m_horizontalMove = 0;
-        theRB2D.velocity = Vector2.zero;
-
-        m_canKnockBack = false;
-    }
-
-    protected virtual void Attack()
+    public virtual void Attack()
     {
         StartCoroutine(AttackRoutine());
     }
@@ -157,232 +78,6 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         canDamage = false;
     }
 
-    private void HandleMovement()
-    {
-        distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
-
-        if (enemySprite.isVisible && playerTransform.gameObject.activeInHierarchy && !isDead)
-        {
-            if (isWaypointMovement && !targetIsPlayer && m_enemyAnimation.idleAnimation != null)
-            {
-                HandleWaypointMovement();
-            }
-
-            if (isAggroMovement)
-            {
-                HandleAggroMovement();
-            }
-
-            if (isAttacking || isDead || isIdle)
-            {
-                theRB2D.velocity = Vector2.zero;
-                moveDirection = Vector3.zero;
-                m_horizontalMove = 0;
-                isWalking = false;
-            }
-            if (targetIsPlayer && isAggroMovement && !isAttacking && !isTakingHit && !isIdle)
-            {
-                theRB2D.velocity = new Vector2(m_horizontalMove * speed, theRB2D.velocity.y);
-            }
-            else if (!targetIsPlayer && isWaypointMovement && !isIdle)
-            {
-                moveDirection.Normalize();
-                theRB2D.velocity = moveDirection * speed;
-            }
-        }
-    }
-
-    private void HandleDirection()
-    {
-        if (isWaypointMovement)
-        {
-            if (theRB2D.velocity.x < 0)
-            {
-                enemyTransform.rotation = Quaternion.Euler(0, 180, 0);
-            }
-            if (theRB2D.velocity.x > 0)
-            {
-                enemyTransform.rotation = Quaternion.Euler(0, 0, 0);
-            }
-        }
-    }
-
-    private void HandleAggroMovement()
-    {
-        if (distanceToPlayer <= rangeToAggro && !m_playerController.isDead)
-        {
-
-            if (!isAttacking)
-            {
-                if (playerTransform.position.x < transform.position.x)
-                {
-                    enemyTransform.rotation = Quaternion.Euler(0, 180, 0);
-                }
-                if (playerTransform.position.x > transform.position.x)
-                {
-                    enemyTransform.rotation = Quaternion.Euler(0, 0, 0);
-                }
-            }
-
-            if (canMove && !isAttacking && !isTakingHit)
-            {
-                isWalking = true;
-                targetIsPlayer = true;
-
-                if (isWaypointMovement)
-                {
-                    // saving the last target before player for waypointmovement
-                    if (target == pointA.position || target == pointB.position)
-                    {
-                        oldTarget = target;
-                    }
-
-                    target = playerTransform.position;
-                }
-            }
-        }
-        else
-        {
-            if (isAggroMovement && !isWaypointMovement)
-            {
-                isWalking = false;
-            }
-
-            if (isWaypointMovement || m_playerController.isDead)
-            {
-                targetIsPlayer = false;
-            }
-        }
-
-        if (distanceToPlayer <= rangeToAttack && !m_playerController.isDead && !isAttacking && !isTakingHit)
-        {
-            m_horizontalMove = 0;
-            Attack();
-        }
-        // else if (m_playerController.isDead && isAggroMovement && !isWaypointMovement)
-        // {
-        //     isWalking = false;
-        // }
-
-        if (!isAttacking && !m_playerController.isDead && isWalking && !isTakingHit)
-        {
-            isIdle = false;
-
-            if (playerTransform.position.x < transform.position.x)
-            {
-                m_horizontalMove = -speed;
-            }
-            if (playerTransform.position.x > transform.position.x)
-            {
-                m_horizontalMove = speed;
-            }
-        }
-        else if (!isWaypointMovement || targetIsPlayer)
-        {
-            isIdle = false;
-
-            if (playerTransform.position.x < transform.position.x)
-            {
-                m_horizontalMove = -speed;
-            }
-            if (playerTransform.position.x > transform.position.x)
-            {
-                m_horizontalMove = speed;
-            }
-        }
-    }
-
-    private void HandleWaypointMovement()
-    {
-
-        distanceToA = Vector2.Distance(transform.position, pointA.position);
-        distanceToB = Vector2.Distance(transform.position, pointB.position);
-
-        if (distanceToA < 0.5f && !targetIsPlayer)
-        {
-            target = pointB.position;
-            oldTarget = target;
-
-            m_horizontalMove = 0;
-            theRB2D.velocity = Vector2.zero;
-
-            while (waypointIteration == 0)
-            {
-                if (canMove)
-                {
-                    StartCoroutine(m_enemyAnimation.WaypointAnimRoutine());
-                    waypointIteration++;
-                }
-            }
-        }
-        else if (distanceToB < 0.5f && !targetIsPlayer)
-        {
-            target = pointA.position;
-            oldTarget = target;
-            
-            m_horizontalMove = 0;
-            theRB2D.velocity = Vector2.zero;
-
-            while (waypointIteration == 0)
-            {
-                if (canMove)
-                {
-                    StartCoroutine(m_enemyAnimation.WaypointAnimRoutine());
-                    waypointIteration++;
-                }
-            }
-        }
-        else
-        {
-            waypointIteration = 0;
-        }
-        // when player lefts aggro we use last target before player.
-        if (Vector2.Distance(target, transform.position) < 1f || distanceToA < distanceToPlayer && distanceToB < distanceToPlayer)
-        {
-            target = oldTarget;
-        }
-
-        if (isWalking && !isTakingHit)
-        {
-            moveDirection = target - transform.position;
-        }
-    }
-
-    private void OnCollisionStay2D(Collision2D other)
-    {
-        // keeping enemies from going to edges
-        if (other.gameObject.CompareTag("enemyWall"))
-        {
-            canMove = false;
-            isWalking = false;
-            if (isWaypointMovement)
-            {
-                isIdle = true;
-
-                if (!targetIsPlayer)
-                {
-                    target = oldTarget;
-                    canMove = true;
-                    isIdle = false;
-                    isWalking = true;
-                }
-            }
-        }
-    }
-
-    private void OnCollisionExit2D(Collision2D other)
-    {
-        if (other.gameObject.CompareTag("enemyWall"))
-        {
-            canMove = true;
-            if (isWaypointMovement)
-            {
-                isIdle = false;
-                isWalking = true;
-            }
-        }
-    }
-
     // animation event
     private void CanDamage()
     {
@@ -391,6 +86,9 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
     public void Damage(float damageTaken)
     {
+
+        didTakeDamage = true;
+
         if (!m_playerController.isDashAttacking)
         {
             knockbackIteration++;
@@ -407,16 +105,16 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
             StartCoroutine(PlayBloodAnim());
         }
 
-        if (canKnockBack && knockbackIteration == 2)
+        if (m_enemyMovement.canKnockBack && knockbackIteration == 2)
         {
             knockbackIteration = 0;
-            m_canKnockBack = true;
+            m_enemyMovement.m_canKnockBack = true;
         }
 
         if (m_enemyAnimation.takeHitAnimation != null)
         {
-            m_horizontalMove = 0;
-            moveDirection = Vector3.zero;
+            m_enemyMovement.horizontalMove = 0;
+            m_enemyMovement.moveDirection = Vector3.zero;
             StartCoroutine(m_enemyAnimation.TakeHitAnimRoutine());
         }
 
@@ -433,6 +131,8 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         bloodAnimator.SetTrigger("Blood");
 
         yield return new WaitForSeconds(.35f);
+
+        didTakeDamage = false;
 
         bloodAnimation.SetActive(false);
 
@@ -463,5 +163,14 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     public void Damage(float damageTaken, Vector3 whoDamaged)
     {
         // not usable right now.
+    }
+
+    public float GetHealthNormalized()
+    {
+        return currentHealth / health;
+    }
+    public float GetCurrentHealth()
+    {
+        return currentHealth;
     }
 }

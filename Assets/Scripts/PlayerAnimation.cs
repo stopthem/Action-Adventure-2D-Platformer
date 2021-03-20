@@ -6,6 +6,7 @@ public class PlayerAnimation : MonoBehaviour
 {
     private Animator m_playerAnimator;
     private PlayerController m_playerController;
+    private PlayerMovement m_playerMovement;
 
     [Header("Animations")]
     public AnimationClip attackAnimation;
@@ -14,6 +15,7 @@ public class PlayerAnimation : MonoBehaviour
 
     private void Awake()
     {
+        m_playerMovement = GetComponent<PlayerMovement>();
         m_playerAnimator = GetComponent<Animator>();
         m_playerController = GetComponent<PlayerController>();
     }
@@ -22,7 +24,7 @@ public class PlayerAnimation : MonoBehaviour
     {
         if (HasParameter("Moving", m_playerAnimator))
         {
-            Moving(m_playerController.isMoving);
+            Moving(m_playerMovement.isMoving);
         }
         if (HasParameter("Attacking", m_playerAnimator))
         {
@@ -34,15 +36,15 @@ public class PlayerAnimation : MonoBehaviour
         }
         if (HasParameter("IsDashing", m_playerAnimator))
         {
-            Dash(m_playerController.isDashing);
+            Dash(m_playerMovement.isDashing);
         }
         if (HasParameter("IsFalling", m_playerAnimator))
         {
-            Falling(m_playerController.isFalling);
+            Falling(m_playerMovement.isFalling);
         }
         if (HasParameter("Jump", m_playerAnimator))
         {
-            Jump(m_playerController.isJumping);
+            Jump(m_playerMovement.isJumping);
         }
         if (HasParameter("IsInvincible", m_playerAnimator))
         {
@@ -51,6 +53,10 @@ public class PlayerAnimation : MonoBehaviour
         if (HasParameter("IsPoisoned", m_playerAnimator))
         {
             isPoisoned(m_playerController.isPoisoned);
+        }
+        if (HasParameter("CriticalHealth", m_playerAnimator))
+        {
+            CriticalHealth(m_playerController.isCriticalHealth);
         }
     }
 
@@ -67,11 +73,11 @@ public class PlayerAnimation : MonoBehaviour
     {
         if (move > 0)
         {
-            m_playerController.isMoving = true;
+            m_playerMovement.isMoving = true;
         }
         else
         {
-            m_playerController.isMoving = false;
+            m_playerMovement.isMoving = false;
         }
     }
 
@@ -143,6 +149,11 @@ public class PlayerAnimation : MonoBehaviour
         }
     }
 
+    private void CriticalHealth(bool status)
+    {
+        m_playerAnimator.SetBool("CriticalHealth", status);
+    }
+
     public void MovingAttackAnim()
     {
         if (!m_playerController.isDead)
@@ -167,7 +178,7 @@ public class PlayerAnimation : MonoBehaviour
 
     public void AttackAnim()
     {
-        if (m_playerController.isAttacking || m_playerController.isMoving)
+        if (m_playerController.isAttacking || m_playerMovement.isMoving)
         {
             return;
         }
@@ -179,7 +190,7 @@ public class PlayerAnimation : MonoBehaviour
 
     public void Falling(bool status)
     {
-        if (m_playerController.isJumping)
+        if (m_playerMovement.isJumping)
         {
             m_playerAnimator.SetBool("IsFalling", status);
         }

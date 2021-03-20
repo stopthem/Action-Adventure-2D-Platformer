@@ -8,7 +8,7 @@ public class Spider : Enemy
     public float poisonDuration;
     public float poisonDurationPerTick;
 
-    protected override void Attack()
+    public override void Attack()
     {
         StartCoroutine(PoisonRoutine());
     }

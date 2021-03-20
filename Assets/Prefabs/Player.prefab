@@ -13,9 +13,10 @@ GameObject:
   - component: {fileID: 2845744379173839943}
   - component: {fileID: 2845744379173839947}
   - component: {fileID: 2845744379173839946}
+  - component: {fileID: 122544685}
   - component: {fileID: 2845744379173839944}
   - component: {fileID: 2845744379173839945}
-  - component: {fileID: 122544685}
+  - component: {fileID: 189077849}
   m_Layer: 11
   m_Name: Player
   m_TagString: Player
@@ -156,6 +157,22 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.57521707, y: 1.0484471}
   m_EdgeRadius: 0
+--- !u!70 &122544685
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2845744379173839940}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.15, y: -0.15487945}
+  m_Size: {x: 0.44, y: 0.36858368}
+  m_Direction: 0
 --- !u!114 &2845744379173839944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -183,53 +200,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4960d91e6d968084096219d2b78b5738, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  capsuleCollider: {fileID: 0}
   bloodAnimation: {fileID: 2845744377423751748}
-  dashDuration: 0.2
-  dashLength: 0.8
-  dashSpeed: 15
-  dashCooldown: 3
   speedAfterMovingAttack: 2.5
-  movingAttackDamage: 2
-  moveSpeed: 5
-  jumpSpeed: 6.5
+  dashAttackDamage: 2
   attackRange: 0.65
   damage: 1
   health: 10
-  knockBackPowerCollide: 5
   knockBackPowerHit: 2.5
   invincibleDuration: 3
   invincible: 0
   isDead: 0
   isAttacking: 0
-  isMoving: 0
   isDashAttacking: 0
-  isDashing: 0
-  isJumping: 0
-  isFalling: 0
   isPoisoned: 0
+  isCriticalHealth: 0
   attackPoint: {fileID: 2845744379180348461}
   enemyLayer:
     serializedVersion: 2
     m_Bits: 1024
-  groundedLayer:
-    serializedVersion: 2
-    m_Bits: 256
---- !u!70 &122544685
-CapsuleCollider2D:
+--- !u!114 &189077849
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2845744379173839940}
   m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: -0.15, y: -0.15487945}
-  m_Size: {x: 0.44, y: 0.36858368}
-  m_Direction: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54de1ffa82187464797d033448195021, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDashing: 0
+  isJumping: 0
+  isFalling: 0
+  isMoving: 0
+  isGrounded: 0
+  canKnockBack: 0
+  moveSpeed: 5
+  jumpSpeed: 6.5
+  horizontalMove: 0
+  direction: 0
+  dashDuration: 0.2
+  dashLength: 0.8
+  dashSpeed: 15
+  dashCooldown: 3
+  knockBackPowerCollide: 5
+  groundedLayer:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!1 &2845744379180348460
 GameObject:
   m_ObjectHideFlags: 0
