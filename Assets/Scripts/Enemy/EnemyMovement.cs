@@ -6,7 +6,6 @@ public class EnemyMovement : MonoBehaviour
 {
     private Enemy m_enemy;
     private EnemyAnimation m_enemyAnimation;
-    private PlayerController m_playerController;
     [SerializeField] private float speed;
 
     [Header("Waypoint Movement")]
@@ -48,8 +47,6 @@ public class EnemyMovement : MonoBehaviour
 
     private void Awake()
     {
-        m_playerController = GameObject.FindWithTag("Player").GetComponent<PlayerController>();
-
         theRB2D = gameObject.GetComponent<Rigidbody2D>();
 
         enemySprite = gameObject.GetComponent<SpriteRenderer>();
@@ -156,7 +153,7 @@ public class EnemyMovement : MonoBehaviour
 
     private void HandleAggroMovement()
     {
-        if (distanceToPlayer <= rangeToAggro && !m_playerController.isDead)
+        if (distanceToPlayer <= rangeToAggro && !PlayerController.Instance.isDead)
         {
 
             if (!m_enemy.isAttacking)
@@ -195,7 +192,7 @@ public class EnemyMovement : MonoBehaviour
                 isWalking = false;
             }
 
-            if (isWaypointMovement || m_playerController.isDead)
+            if (isWaypointMovement || PlayerController.Instance.isDead)
             {
                 targetIsPlayer = false;
                 horizontalMove = 0;
@@ -203,7 +200,7 @@ public class EnemyMovement : MonoBehaviour
             }
         }
 
-        if (distanceToPlayer <= rangeToAttack && !m_playerController.isDead && !m_enemy.isAttacking && !m_enemy.isTakingHit)
+        if (distanceToPlayer <= rangeToAttack && !PlayerController.Instance.isDead && !m_enemy.isAttacking && !m_enemy.isTakingHit)
         {
             horizontalMove = 0;
             m_enemy.Attack();
@@ -213,7 +210,7 @@ public class EnemyMovement : MonoBehaviour
         //     isWalking = false;
         // }
 
-        if (!m_enemy.isAttacking && !m_playerController.isDead && isWalking && !m_enemy.isTakingHit)
+        if (!m_enemy.isAttacking && !PlayerController.Instance.isDead && isWalking && !m_enemy.isTakingHit)
         {
             isIdle = false;
 
@@ -290,7 +287,7 @@ public class EnemyMovement : MonoBehaviour
         {
             target = oldTarget;
         }
-        else if (m_playerController.isDead)
+        else if (PlayerController.Instance.isDead)
         {
             target = oldTarget;
         }

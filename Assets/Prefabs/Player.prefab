@@ -209,6 +209,8 @@ MonoBehaviour:
   health: 10
   knockBackPowerHit: 2.5
   invincibleDuration: 3
+  cameraShakeIntensity: 0.5
+  cameraShakeTime: 0.5
   invincible: 0
   isDead: 0
   isAttacking: 0

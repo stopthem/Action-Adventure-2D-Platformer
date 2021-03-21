@@ -30,10 +30,10 @@ public class Spider : Enemy
 
             for (int i = 0; i < hitEnemies.Length; i++)
             {
-                if (!m_playerController.isPoisoned)
+                if (!PlayerController.Instance.isPoisoned)
                 {
-                    m_playerController.isPoisoned = true;
-                    StartCoroutine(m_playerController.IsPoisonedRoutine(poisonDurationPerTick, poisonDuration,transform.position, enemyDamage));
+                    PlayerController.Instance.isPoisoned = true;
+                    StartCoroutine(PlayerController.Instance.IsPoisonedRoutine(poisonDurationPerTick, poisonDuration,transform.position, enemyDamage));
                 }
                 else
                 {

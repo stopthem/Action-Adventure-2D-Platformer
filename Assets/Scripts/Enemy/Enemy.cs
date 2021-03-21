@@ -6,7 +6,6 @@ using UnityEngine;
 public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 {
     protected EnemyAnimation m_enemyAnimation;
-    protected PlayerController m_playerController;
     protected EnemyMovement m_enemyMovement;
     
     [Header("General")]
@@ -39,8 +38,6 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         theRB2D = GetComponent<Rigidbody2D>();
 
         m_enemyAnimation = GetComponent<EnemyAnimation>();
-
-        m_playerController = GameObject.FindWithTag("Player").GetComponent<PlayerController>();
 
         colliders = GetComponents<Collider2D>();
     }
@@ -86,10 +83,9 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
     public void Damage(float damageTaken)
     {
-
         didTakeDamage = true;
 
-        if (!m_playerController.isDashAttacking)
+        if (!PlayerController.Instance.isDashAttacking)
         {
             knockbackIteration++;
         }
