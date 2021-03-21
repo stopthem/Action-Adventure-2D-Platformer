@@ -237,10 +237,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e65d3e2bb2e133479b26df53c35e282, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shrinkTimer: 3
   shrinkSpeed: 0.2
   barImage: {fileID: 452407627260353411}
-  poisonedColor: {r: 0, g: 1, b: 0.023529412, a: 0}
 --- !u!1 &452407629008574918
 GameObject:
   m_ObjectHideFlags: 0
