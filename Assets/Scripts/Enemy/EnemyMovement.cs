@@ -39,17 +39,21 @@ public class EnemyMovement : MonoBehaviour
 
     private Rigidbody2D theRB2D;
 
-    private SpriteRenderer enemySprite;
+    private SpriteRenderer m_spriteRenderer;
 
     private Vector3 target;
     [HideInInspector] public Vector3 moveDirection;
     private Vector3 oldTarget;
 
+    private BoxCollider2D m_boxCollider2D;
+
     private void Awake()
     {
+        m_boxCollider2D = gameObject.GetComponent<BoxCollider2D>();
+
         theRB2D = gameObject.GetComponent<Rigidbody2D>();
 
-        enemySprite = gameObject.GetComponent<SpriteRenderer>();
+        m_spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
 
         enemyTransform = gameObject.GetComponent<Transform>();
 
@@ -99,25 +103,26 @@ public class EnemyMovement : MonoBehaviour
         theRB2D.velocity = Vector2.zero;
 
         m_canKnockBack = false;
+
     }
 
     private void HandleMovement()
     {
         distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
 
-        if (enemySprite.isVisible && !m_enemy.isDead)
+        if (m_enemy != null)
         {
-            if (isWaypointMovement && !targetIsPlayer && m_enemyAnimation.idleAnimation != null)
+            if (isWaypointMovement && !targetIsPlayer && m_enemyAnimation.idleAnimation != null && !m_enemy.isDead)
             {
                 HandleWaypointMovement();
             }
 
-            if (isAggroMovement)
+            if (isAggroMovement && !m_enemy.isDead)
             {
                 HandleAggroMovement();
             }
 
-            if (m_enemy.isAttacking || m_enemy.isDead || isIdle)
+            if (m_enemy.isAttacking || isIdle)
             {
                 theRB2D.velocity = Vector2.zero;
                 moveDirection = Vector3.zero;
@@ -133,6 +138,10 @@ public class EnemyMovement : MonoBehaviour
                 moveDirection.Normalize();
                 theRB2D.velocity = moveDirection * speed;
             }
+            // if (m_enemy.isDead)
+            // {
+            //     theRB2D.velocity = Vector2.down;
+            // }
         }
     }
 
@@ -296,6 +305,15 @@ public class EnemyMovement : MonoBehaviour
         {
             moveDirection = target - transform.position;
         }
+    }
+
+    public IEnumerator DeathSequence()
+    {
+        m_spriteRenderer.sortingOrder = 20;
+        yield return new WaitForSeconds(5f);
+        m_boxCollider2D.enabled = false;
+        theRB2D.velocity = Vector2.down / 5;
+        Destroy(gameObject,3f);
     }
 
     private void OnCollisionStay2D(Collision2D other)

@@ -136,18 +136,19 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 
     public virtual void Killed()
     {
+        m_enemyMovement.isWalking = false;
+        isAttacking = false;
+
         m_enemyAnimation.DeathAnim();
 
         isDead = true;
 
-        theRB2D.velocity = Vector2.zero;
-
-        Destroy(gameObject, 5f);
+        StartCoroutine(m_enemyMovement.DeathSequence());
 
         DisableColliders();
     }
 
-    protected void DisableColliders()
+    private void DisableColliders()
     {
         theRB2D.isKinematic = true;
         foreach (var collider in colliders)

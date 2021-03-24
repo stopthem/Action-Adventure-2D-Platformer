@@ -11,6 +11,7 @@ public class Chest : MonoBehaviour
     private bool m_isOpened;
     private bool m_canThrow;
     private bool m_canPickup;
+    private bool m_ontriggerEntered;
 
     private void Awake()
     {
@@ -19,7 +20,8 @@ public class Chest : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
+
+        if (Input.GetKeyDown(KeyCode.E) && m_ontriggerEntered)
         {
             m_canPickup = true;
         }
@@ -54,6 +56,7 @@ public class Chest : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Player") && !m_isOpened)
         {
+            m_ontriggerEntered = true;
             UIHandler.Instance.ShowChestText(true);
 
             if (m_canPickup)
@@ -70,6 +73,7 @@ public class Chest : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Player"))
         {
+            m_ontriggerEntered = false;
             UIHandler.Instance.ShowChestText(false);
         }
     }

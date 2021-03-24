@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 {
-    public static PlayerController Instance {get; private set;}
+    public static PlayerController Instance { get; private set; }
 
     // public InputDetection inputDetection;
 
@@ -47,10 +47,13 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     [SerializeField] private Transform attackPoint;
     [SerializeField] private LayerMask enemyLayer;
 
+    [HideInInspector] public SpriteRenderer spriteRenderer;
+
     private void Awake()
     {
         Instance = this;
 
+        spriteRenderer = GetComponent<SpriteRenderer>();
         capsuleCollider = GetComponent<CapsuleCollider2D>();
     }
 
@@ -137,8 +140,6 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
                 PlayerMovement.Instance.horizontalMove = speedAfterMovingAttack;
             }
 
-            isDashAttacking = true;
-
             StartCoroutine(AttackRoutine());
         }
     }
@@ -210,15 +211,21 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     }
 
     //animation event for attack
-    public void CanDamage()
+    private void CanDamage()
     {
         m_candamage = true;
+    }
+    private void StopDashAttack()
+    {
+        isDashAttacking = false;
     }
 
     public void Damage(float damageTaken)
     {
         if (m_canTakeDamage)
         {
+            isDashAttacking = false;
+
             CinemachineShake.Instance.ShakeCamera(cameraShakeIntensity, cameraShakeTime);
 
             currentHealth -= damageTaken;
@@ -260,6 +267,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         if (m_canTakeDamage)
         {
+            isDashAttacking = false;
 
             CinemachineShake.Instance.ShakeCamera(cameraShakeIntensity, cameraShakeTime);
 

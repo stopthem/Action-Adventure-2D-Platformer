@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerAnimation : MonoBehaviour
 {
-    public static PlayerAnimation Instance {get; private set;}
+    public static PlayerAnimation Instance { get; private set; }
 
     private Animator m_playerAnimator;
 
@@ -30,7 +30,7 @@ public class PlayerAnimation : MonoBehaviour
         {
             Attacking(PlayerController.Instance.isAttacking);
         }
-        if (HasParameter("MovingAttack", m_playerAnimator))
+        if (HasParameter("IsDashAttacking", m_playerAnimator))
         {
             DashAttack(PlayerController.Instance.isDashAttacking);
         }
@@ -145,7 +145,7 @@ public class PlayerAnimation : MonoBehaviour
     {
         if (!PlayerController.Instance.isDead)
         {
-            m_playerAnimator.SetBool("MovingAttack", state);
+            m_playerAnimator.SetBool("IsDashAttacking", state);
         }
     }
 
@@ -165,7 +165,6 @@ public class PlayerAnimation : MonoBehaviour
     public IEnumerator MovingAttackRoutine()
     {
         yield return new WaitForSeconds(dashAttackAnimation.length);
-        PlayerController.Instance.isDashAttacking = false;
     }
 
     public void DeathAnimation()

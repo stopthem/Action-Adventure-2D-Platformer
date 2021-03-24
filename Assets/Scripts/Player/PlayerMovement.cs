@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public static PlayerMovement Instance {get; private set;}
+    public static PlayerMovement Instance { get; private set; }
+    private Ghost m_ghost;
 
     private Rigidbody2D m_rigidBody;
     private Transform m_playerTransform;
@@ -45,6 +46,8 @@ public class PlayerMovement : MonoBehaviour
         Instance = this;
         // joystick = FindObjectOfType<Joystick>();
 
+        m_ghost = GetComponent<Ghost>();
+
         m_rigidBody = GetComponent<Rigidbody2D>();
 
         m_playerTransform = GetComponent<Transform>();
@@ -61,9 +64,14 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!PlayerController.Instance.isDead)
         {
-            if (!PlayerController.Instance.isAttacking && !PlayerController.Instance.isDashAttacking && !canKnockBack)
+            if (!PlayerController.Instance.isAttacking && !PlayerController.Instance.isDashAttacking && !canKnockBack && !isDashing)
             {
                 MoveCharacter();
+            }
+
+            if (isDashing)
+            {
+                m_rigidBody.velocity = new Vector2(m_rigidBody.velocity.x, 0);
             }
 
             IsGrounded();
@@ -106,6 +114,10 @@ public class PlayerMovement : MonoBehaviour
             {
                 m_rigidBody.AddForce(new Vector2(dashLength, 0) * dashSpeed, ForceMode2D.Impulse);
             }
+            else
+            {
+                
+            }
         }
     }
 
@@ -114,13 +126,18 @@ public class PlayerMovement : MonoBehaviour
         if (horizontalMove < 0)
         {
             m_playerTransform.rotation = Quaternion.Euler(0, 180, 0);
-
-            direction = 1;
         }
         if (horizontalMove > 0)
         {
             m_playerTransform.rotation = Quaternion.Euler(0, 0, 0);
+        }
 
+        if (m_playerTransform.rotation == Quaternion.Euler(0, 180, 0))
+        {
+            direction = 1;
+        }
+        else if (m_playerTransform.rotation == Quaternion.Euler(0, 0, 0))
+        {
             direction = 2;
         }
     }
@@ -144,6 +161,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftControl) && m_canDash)
         {
+            isDashing = true;
             StartCoroutine(DashRoutine());
         }
 
@@ -173,7 +191,8 @@ public class PlayerMovement : MonoBehaviour
     {
         m_canDash = false;
 
-        isDashing = true;
+
+        m_ghost.canCreate = true;
 
         if (!isGrounded)
         {
@@ -181,6 +200,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
         yield return new WaitForSeconds(dashDuration);
+
+        m_ghost.canCreate = false;
 
         isDashing = false;
 
@@ -330,7 +351,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     //animation event for movingAttack
-    public void StopPlayer()
+    private void StopPlayer()
     {
         horizontalMove = 0;
     }
