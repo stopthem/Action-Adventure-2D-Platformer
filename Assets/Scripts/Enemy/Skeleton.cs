@@ -7,6 +7,14 @@ public class Skeleton : Enemy
     [Header("Skeleton Spesific")]
     public float rebornTime;
 
+    private void Update()
+    {
+        if (isDead)
+        {
+            theRB2D.velocity = Vector2.zero;
+        }
+    }
+
 
     public override void Killed()
     {
@@ -29,8 +37,6 @@ public class Skeleton : Enemy
 
     private IEnumerator RebornRoutine()
     {
-        theRB2D.constraints = RigidbodyConstraints2D.FreezePositionY;
-
         yield return new WaitForSeconds(rebornTime);
 
         m_enemyAnimation.Reborn(true);
@@ -40,8 +46,5 @@ public class Skeleton : Enemy
         yield return new WaitForSeconds(.5f);
 
         m_enemyAnimation.Reborn(false);
-        theRB2D.constraints = RigidbodyConstraints2D.None;
-        theRB2D.constraints = RigidbodyConstraints2D.FreezePositionY;
-        theRB2D.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
 }
