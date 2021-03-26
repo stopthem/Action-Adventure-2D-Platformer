@@ -1,34 +1,70 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.UI;
+using TMPro;
 public class Chest : MonoBehaviour
 {
     public GameObject coin;
 
     private Animator m_animator;
 
+    private Button interactButton;
+    private Image interactButtonImage;
+
+
     private bool m_isOpened;
     private bool m_canThrow;
     private bool m_canPickup;
-    private bool m_ontriggerEntered;
+    [HideInInspector] public bool m_ontriggerEntered;
 
     private void Awake()
     {
+        if (InputDetection.instance.isJoystickControlsForMobileEnabled)
+        {
+            interactButton = GameObject.Find("JoystickInteract").GetComponent<Button>();
+            interactButtonImage = interactButton.GetComponent<Image>();
+        }
+
         m_animator = GetComponent<Animator>();
     }
 
     private void Update()
     {
-
-        if (Input.GetKeyDown(KeyCode.E) && m_ontriggerEntered)
+        if (InputDetection.instance.isJoystickControlsForMobileEnabled)
         {
-            m_canPickup = true;
+            if (m_ontriggerEntered)
+            {
+                UIHandler.Instance.MobileButtonHandler(true,false,false,true);
+            }
+            else
+            {
+                UIHandler.Instance.MobileButtonHandler(false,false,false,true);
+            }
+
+            if (m_isOpened)
+            {
+                UIHandler.Instance.MobileButtonHandler(false,false,false,true);
+                UIHandler.Instance.ShowChestText(false);
+            }
+
+            CheckForInteract();
         }
-
-        if (m_isOpened)
+        else
         {
-            UIHandler.Instance.ShowChestText(false);
+            if (Input.GetKeyDown(KeyCode.E) && m_ontriggerEntered)
+            {
+                m_canPickup = true;
+            }
+            else if (PlayerController.Instance.canOpenChest && m_ontriggerEntered)
+            {
+                m_canPickup = true;
+            }
+
+            if (m_isOpened)
+            {
+                UIHandler.Instance.ShowChestText(false);
+            }
         }
     }
 
@@ -82,5 +118,25 @@ public class Chest : MonoBehaviour
     private void ThrowCoin()
     {
         m_canThrow = true;
+    }
+
+    public void CheckForInteract()
+    {
+        #if UNITY_EDITOR
+        if (interactButton == null)
+        {
+            interactButton = GameObject.Find("JoystickInteract").GetComponent<Button>();
+        }
+        #endif
+        
+        interactButton.onClick.AddListener(delegate { OnButtonTapped(); });
+    }
+
+    public void OnButtonTapped()
+    {
+        if (m_ontriggerEntered)
+        {
+            m_canPickup = true;
+        }
     }
 }

@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     private bool m_candamage;
     private bool m_canTakeDamage = true;
     private bool m_poisonedDamage;
+    [HideInInspector] public bool canOpenChest;
     [HideInInspector] public bool invincible;
     [HideInInspector] public bool isDead;
     [HideInInspector] public bool isAttacking;
@@ -366,5 +367,32 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     public float GetHealthNormalized()
     {
         return currentHealth / health;
+    }
+
+    //ONCLICK
+    public void DashAttackButton()
+    {
+        PlayerMovement.Instance.dashButtonUsed++;
+
+        if (PlayerMovement.Instance.isDashing && PlayerMovement.Instance.dashButtonUsed == 3 && PlayerMovement.Instance.isGrounded)
+        {
+            PlayerMovement.Instance.dashButtonUsed = 0;
+            isDashAttacking = true;
+            HandleAttack();
+            UIHandler.Instance.DashButton(false,false);
+        }
+    }
+    //ONCLICK
+    public void AttackButton()
+    {
+        if (!PlayerMovement.Instance.isDashing)
+        {
+            StartCoroutine(AttackRoutine());
+        }
+    }
+    //ONCLICK
+    public void InteractButton()
+    {
+        canOpenChest = true;
     }
 }

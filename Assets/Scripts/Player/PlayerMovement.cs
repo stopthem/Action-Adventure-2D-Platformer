@@ -6,6 +6,7 @@ public class PlayerMovement : MonoBehaviour
 {
     public static PlayerMovement Instance { get; private set; }
     private Ghost m_ghost;
+    private Joystick joystick;
 
     private Rigidbody2D m_rigidBody;
     private Transform m_playerTransform;
@@ -13,7 +14,6 @@ public class PlayerMovement : MonoBehaviour
     private BoxCollider2D m_boxCollider2D;
 
     private int m_triggerIteration = 0;
-    private int m_buttonUsed = 0;
 
     [HideInInspector] public bool isDashing;
     [HideInInspector] public bool isJumping;
@@ -28,6 +28,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpSpeed;
     [HideInInspector] public float horizontalMove;
     [HideInInspector] public float direction;
+    [HideInInspector] public float dashButtonUsed;
     private float m_originalGravity;
     [Header("Dash")]
     [SerializeField] private float dashDuration;
@@ -44,7 +45,8 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        // joystick = FindObjectOfType<Joystick>();
+
+        joystick = FindObjectOfType<DynamicJoystick>();
 
         m_ghost = GetComponent<Ghost>();
 
@@ -74,7 +76,18 @@ public class PlayerMovement : MonoBehaviour
                 m_rigidBody.velocity = new Vector2(m_rigidBody.velocity.x, 0);
             }
 
+            if (m_canDash && InputDetection.instance.isJoystickControlsForMobileEnabled)
+            {
+                UIHandler.Instance.DashButton(false, true);
+            }
+
             IsGrounded();
+
+
+            if (!isDashing && InputDetection.instance.isJoystickControlsForMobileEnabled)
+            {
+                dashButtonUsed = 0;
+            }
         }
         else
         {
@@ -114,11 +127,45 @@ public class PlayerMovement : MonoBehaviour
             {
                 m_rigidBody.AddForce(new Vector2(dashLength, 0) * dashSpeed, ForceMode2D.Impulse);
             }
-            else
-            {
-                
-            }
         }
+    }
+
+    private IEnumerator DashRoutine()
+    {
+        isDashing = true;
+
+        m_canDash = false;
+
+
+        m_ghost.canCreate = true;
+
+        if (!isGrounded)
+        {
+            m_rigidBody.gravityScale = 0;
+        }
+
+        yield return new WaitForSeconds(dashDuration);
+
+        m_ghost.canCreate = false;
+
+        isDashing = false;
+
+        if (InputDetection.instance.isJoystickControlsForMobileEnabled && !PlayerController.Instance.isDashAttacking)
+        {
+            UIHandler.Instance.DashButton(false, false);
+        }
+
+        m_rigidBody.gravityScale = m_originalGravity;
+
+        yield return new WaitForSeconds(dashCooldown);
+
+        m_canDash = true;
+
+        if (InputDetection.instance.isJoystickControlsForMobileEnabled)
+        {
+            UIHandler.Instance.DashButton(false, true);
+        }
+
     }
 
     private void HandleDirection()
@@ -142,16 +189,11 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // handles all moving based on platform and input device
     private void MoveCharacter()
     {
         // if (inputDetection.instance.isGamepadEnabled)
         // {
         //     HandleGamepadMovement();
-        // }
-        // else if (inputDetection.instance.isMobile)
-        // {
-        //     HandleMobileMovement();
         // }
 
         if (Input.GetKeyDown(KeyCode.W))
@@ -161,14 +203,22 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftControl) && m_canDash)
         {
-            isDashing = true;
             StartCoroutine(DashRoutine());
         }
 
         m_moveInput.x = Input.GetAxisRaw("Horizontal");
+
         m_moveInput.Normalize();
 
-        horizontalMove = moveSpeed * m_moveInput.x;
+        if (InputDetection.instance.isJoystickControlsForMobileEnabled)
+        {
+            horizontalMove = joystick.Horizontal * moveSpeed;
+        }
+        else
+        {
+            horizontalMove = moveSpeed * m_moveInput.x;
+        }
+
         if (horizontalMove > 0 || horizontalMove < 0)
         {
             if (!PlayerController.Instance.isDead)
@@ -181,35 +231,18 @@ public class PlayerMovement : MonoBehaviour
             isMoving = false;
         }
 
-        PlayerAnimation.Instance.Move(Mathf.Abs(m_moveInput.x));
+        if (InputDetection.instance.isJoystickControlsForMobileEnabled)
+        {
+            PlayerAnimation.Instance.Move(Mathf.Abs(joystick.Horizontal));
+        }
+        else
+        {
+            PlayerAnimation.Instance.Move(Mathf.Abs(m_moveInput.x));
+        }
+
 
         HandleDirection();
 
-    }
-
-    private IEnumerator DashRoutine()
-    {
-        m_canDash = false;
-
-
-        m_ghost.canCreate = true;
-
-        if (!isGrounded)
-        {
-            m_rigidBody.gravityScale = 0;
-        }
-
-        yield return new WaitForSeconds(dashDuration);
-
-        m_ghost.canCreate = false;
-
-        isDashing = false;
-
-        m_rigidBody.gravityScale = m_originalGravity;
-
-        yield return new WaitForSeconds(dashCooldown);
-
-        m_canDash = true;
     }
 
     private void HandleGamepadMovement()
@@ -226,26 +259,6 @@ public class PlayerMovement : MonoBehaviour
         // m_horizontalMove = moveSpeed * m_moveInput.x;
     }
 
-    private void HandleMobileMovement()
-    {
-        // if (m_moveLeft)
-        // {
-        //     m_horizontalMove = -moveSpeed;
-        // }
-        // else if (m_moveRight)
-        // {
-        //     m_horizontalMove = moveSpeed;
-        // }
-        // else
-        // {
-        //     m_horizontalMove = 0;
-        // }
-
-        // if (inputDetection.instance.isJoystickControlsForMobileEnabled)
-        // {
-        //     m_horizontalMove = joystick.Horizontal * moveSpeed;
-        // }
-    }
 
     private void IsGrounded()
     {
@@ -258,7 +271,6 @@ public class PlayerMovement : MonoBehaviour
             isGrounded = true;
             isJumping = false;
             isFalling = false;
-            m_buttonUsed = 0;
         }
         else
         {
@@ -275,8 +287,7 @@ public class PlayerMovement : MonoBehaviour
     // Handles jump button on click
     public void JumpButton()
     {
-        m_buttonUsed++;
-        if (isGrounded && m_buttonUsed == 1)
+        if (isGrounded)
         {
             m_rigidBody.velocity = Vector2.up * jumpSpeed;
         }
@@ -354,5 +365,15 @@ public class PlayerMovement : MonoBehaviour
     private void StopPlayer()
     {
         horizontalMove = 0;
+    }
+    //ONCLICK
+    public void DashButton()
+    {
+        if (m_canDash == true)
+        {
+            dashButtonUsed++;
+            UIHandler.Instance.DashButton(true, true);
+            StartCoroutine(DashRoutine());
+        }
     }
 }
