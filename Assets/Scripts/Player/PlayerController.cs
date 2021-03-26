@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using TMPro;
 public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 {
     public static PlayerController Instance { get; private set; }
@@ -46,6 +46,10 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     [Header("Attacking")]
     [SerializeField] private Transform attackPoint;
     [SerializeField] private LayerMask enemyLayer;
+
+    [Header("Damage Popup")]
+    [SerializeField] private GameObject damagePopup;
+    [SerializeField] private Transform damagePopupTransform;
 
     [HideInInspector] public SpriteRenderer spriteRenderer;
 
@@ -205,7 +209,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     private IEnumerator IsMovingAttackRoutine()
     {
         capsuleCollider.enabled = false;
-        yield return PlayerAnimation.Instance.MovingAttackRoutine();
+        yield return new WaitForSeconds(PlayerAnimation.Instance.dashAttackAnimation.length);
         yield return new WaitForSeconds(.5f);
         capsuleCollider.enabled = true;
     }
@@ -229,6 +233,12 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             CinemachineShake.Instance.ShakeCamera(cameraShakeIntensity, cameraShakeTime);
 
             currentHealth -= damageTaken;
+
+            if (!isDead)
+            {
+                HandlePopup(damageTaken);
+            }
+
 
             if (PlayerMovement.Instance.canKnockBack == false && !m_poisonedDamage)
             {
@@ -272,6 +282,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             CinemachineShake.Instance.ShakeCamera(cameraShakeIntensity, cameraShakeTime);
 
             currentHealth -= damageTaken;
+            HandlePopup(damageTaken);
 
             if (whoDamaged != transform.position)
             {
@@ -303,6 +314,21 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             {
                 Killed();
             }
+        }
+    }
+
+    private void HandlePopup(float damageTaken)
+    {
+        GameObject damagePopupG = Instantiate(damagePopup, damagePopupTransform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+        damagePopupG.GetComponent<TextMeshPro>().text = damageTaken.ToString();
+
+        if (isPoisoned)
+        {
+            damagePopupG.GetComponent<TextMeshPro>().color = Color.green;
+        }
+        else
+        {
+            damagePopupG.GetComponent<TextMeshPro>().color = Color.yellow;
         }
     }
 

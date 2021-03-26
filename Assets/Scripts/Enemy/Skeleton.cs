@@ -29,11 +29,19 @@ public class Skeleton : Enemy
 
     private IEnumerator RebornRoutine()
     {
+        theRB2D.constraints = RigidbodyConstraints2D.FreezePositionY;
+
         yield return new WaitForSeconds(rebornTime);
+
         m_enemyAnimation.Reborn(true);
         isDead = false;
         currentHealth = health;
+        
         yield return new WaitForSeconds(.5f);
+
         m_enemyAnimation.Reborn(false);
+        theRB2D.constraints = RigidbodyConstraints2D.None;
+        theRB2D.constraints = RigidbodyConstraints2D.FreezePositionY;
+        theRB2D.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
 }

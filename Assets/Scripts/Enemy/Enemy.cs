@@ -2,12 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using TMPro;
 public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
 {
     protected EnemyAnimation m_enemyAnimation;
     protected EnemyMovement m_enemyMovement;
-    
+
     [Header("General")]
     [SerializeField] protected float health;
     protected float currentHealth;
@@ -27,8 +27,13 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
     [SerializeField] protected Transform hitPoint;
     [SerializeField] protected LayerMask playerLayer;
 
+    [Header("DamagePopup")]
+    [SerializeField] private GameObject damagePopup;
+    [SerializeField] private Transform damagePopupTransform;
+
     protected Collider2D[] colliders;
 
+    [Header("Blood Animation")]
     [SerializeField] private GameObject bloodAnimation;
 
     private void Awake()
@@ -95,6 +100,12 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         }
 
         currentHealth -= damageTaken;
+        
+        if (!isDead)
+        {
+            HandlePopup(damageTaken);
+        }
+
 
         if (bloodAnimation != null)
         {
@@ -118,6 +129,12 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         {
             Killed();
         }
+    }
+
+    private void HandlePopup(float damageTaken)
+    {
+        GameObject damagePopupG = Instantiate(damagePopup, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;
+        damagePopupG.GetComponent<TextMeshPro>().text = damageTaken.ToString();
     }
 
     private IEnumerator PlayBloodAnim()

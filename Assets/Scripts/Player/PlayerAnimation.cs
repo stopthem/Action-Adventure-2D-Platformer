@@ -154,19 +154,6 @@ public class PlayerAnimation : MonoBehaviour
         m_playerAnimator.SetBool("CriticalHealth", status);
     }
 
-    public void MovingAttackAnim()
-    {
-        if (!PlayerController.Instance.isDead)
-        {
-            StartCoroutine(MovingAttackRoutine());
-        }
-    }
-
-    public IEnumerator MovingAttackRoutine()
-    {
-        yield return new WaitForSeconds(dashAttackAnimation.length);
-    }
-
     public void DeathAnimation()
     {
         if (!PlayerController.Instance.isDead)

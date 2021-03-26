@@ -1,5 +1,35 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &505894321
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 505894322}
+  m_Layer: 11
+  m_Name: damagePopupTransform
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &505894322
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 505894321}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.11, y: 0.169, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 2845744379173839941}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2845744379173839940
 GameObject:
   m_ObjectHideFlags: 0
@@ -38,6 +68,7 @@ Transform:
   m_Children:
   - {fileID: 2845744379180348461}
   - {fileID: 2845744377423751749}
+  - {fileID: 505894322}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -219,7 +250,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   capsuleCollider: {fileID: 0}
   bloodAnimation: {fileID: 2845744377423751748}
-  speedAfterMovingAttack: 2.5
+  speedAfterMovingAttack: 1.5
   dashAttackDamage: 2
   attackRange: 0.65
   damage: 1
@@ -238,6 +269,9 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 1024
+  damagePopup: {fileID: 4592266443930493498, guid: 07367b8361d1ac044840c70f01427f40,
+    type: 3}
+  damagePopupTransform: {fileID: 505894322}
   spriteRenderer: {fileID: 0}
 --- !u!114 &189077849
 MonoBehaviour:
@@ -262,9 +296,9 @@ MonoBehaviour:
   horizontalMove: 0
   direction: 0
   dashDuration: 0.2
-  dashLength: 0.8
+  dashLength: 1
   dashSpeed: 15
-  dashCooldown: 0
+  dashCooldown: 3
   knockBackPowerCollide: 5
   groundedLayer:
     serializedVersion: 2
