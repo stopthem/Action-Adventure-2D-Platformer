@@ -5,13 +5,13 @@ Currently have:
 3 enemies,
 Player and enemy health, animation, damage system,
 Enemy waypoint and aggro movement,
-Dash attack, dash, knockbacking,
+Dash attack, dash, knockbacking, level design.
 
 Planning to do:
 Sound effects,
-UI,
-Chests,
+UI(%50),
+Chests✅,
 Market,
 Adds,
 Boss,
-Mobile movement.
+Mobile movement✅.
