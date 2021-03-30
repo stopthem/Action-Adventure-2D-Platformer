@@ -20,13 +20,16 @@ public class Chest : MonoBehaviour
 
     private void Awake()
     {
+        m_animator = GetComponent<Animator>();
+    }
+
+    private void Start()
+    {
         if (InputDetection.instance.isJoystickControlsForMobileEnabled)
         {
             interactButton = GameObject.Find("JoystickInteract").GetComponent<Button>();
             interactButtonImage = interactButton.GetComponent<Image>();
         }
-
-        m_animator = GetComponent<Animator>();
     }
 
     private void Update()
@@ -35,16 +38,16 @@ public class Chest : MonoBehaviour
         {
             if (m_ontriggerEntered)
             {
-                UIHandler.Instance.MobileButtonHandler(true,false,false,true);
+                UIHandler.Instance.MobileButtonHandler(true, false, false, true);
             }
             else
             {
-                UIHandler.Instance.MobileButtonHandler(false,false,false,true);
+                UIHandler.Instance.MobileButtonHandler(false, false, false, true);
             }
 
             if (m_isOpened)
             {
-                UIHandler.Instance.MobileButtonHandler(false,false,false,true);
+                UIHandler.Instance.MobileButtonHandler(false, false, false, true);
                 UIHandler.Instance.ShowChestText(false);
             }
 
@@ -122,13 +125,13 @@ public class Chest : MonoBehaviour
 
     public void CheckForInteract()
     {
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         if (interactButton == null)
         {
             interactButton = GameObject.Find("JoystickInteract").GetComponent<Button>();
         }
-        #endif
-        
+#endif
+
         interactButton.onClick.AddListener(delegate { OnButtonTapped(); });
     }
 

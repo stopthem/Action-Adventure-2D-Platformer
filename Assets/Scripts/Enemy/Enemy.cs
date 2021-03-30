@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
+public class Enemy : MonoBehaviour, IDamageableEnemy<float>, IKillable
 {
     protected EnemyAnimation m_enemyAnimation;
     protected EnemyMovement m_enemyMovement;
@@ -172,11 +172,6 @@ public class Enemy : MonoBehaviour, IDamageable<float>, IKillable
         {
             collider.enabled = false;
         }
-    }
-
-    public void Damage(float damageTaken, Vector3 whoDamaged)
-    {
-        // not usable right now.
     }
 
     public float GetHealthNormalized()

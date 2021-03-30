@@ -7,6 +7,7 @@ public class PlayerAnimation : MonoBehaviour
     public static PlayerAnimation Instance { get; private set; }
 
     private Animator m_playerAnimator;
+    private Animator m_coinAnimator;
 
     [Header("Animations")]
     public AnimationClip attackAnimation;
@@ -16,11 +17,17 @@ public class PlayerAnimation : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-
+        m_coinAnimator = transform.Find("PlayerCoin").GetComponent<Animator>();
         m_playerAnimator = GetComponent<Animator>();
     }
 
     private void Update()
+    {
+        CheckForParameters();
+
+    }
+
+    private void CheckForParameters()
     {
         if (HasParameter("Moving", m_playerAnimator))
         {
@@ -87,6 +94,11 @@ public class PlayerAnimation : MonoBehaviour
         {
             m_playerAnimator.SetBool("Moving", move);
         }
+    }
+
+    public void CoinPickupAnim()
+    {
+        m_coinAnimator.SetTrigger("Pickup");
     }
 
     public void Jump(bool state)

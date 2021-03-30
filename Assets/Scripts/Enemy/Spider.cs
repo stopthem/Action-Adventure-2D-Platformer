@@ -32,7 +32,6 @@ public class Spider : Enemy
             {
                 if (!PlayerController.Instance.isPoisoned)
                 {
-                    PlayerController.Instance.isPoisoned = true;
                     StartCoroutine(PlayerController.Instance.IsPoisonedRoutine(poisonDurationPerTick, poisonDuration,transform.position, enemyDamage));
                 }
                 else

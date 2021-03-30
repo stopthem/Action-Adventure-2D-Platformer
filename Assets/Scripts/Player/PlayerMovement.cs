@@ -66,7 +66,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!PlayerController.Instance.isDead)
         {
-            if (!PlayerController.Instance.isAttacking && !PlayerController.Instance.isDashAttacking && !canKnockBack && !isDashing)
+            if (!PlayerController.Instance.isAttacking && !PlayerController.Instance.isDashAttacking && !canKnockBack && !isDashing && !GameManager.Instance.isPaused)
             {
                 MoveCharacter();
             }

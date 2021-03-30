@@ -6,6 +6,8 @@ public class Coin : MonoBehaviour
 {
     private BoxCollider2D m_boxCollider;
 
+    private Animator m_animator;
+
     private bool m_canPickup;
     private bool m_isChestPickUp;
 
@@ -19,6 +21,7 @@ public class Coin : MonoBehaviour
 
     private void Awake()
     {
+        m_animator = GetComponent<Animator>();
         m_rigidBody = GetComponent<Rigidbody2D>();
         m_boxCollider = GetComponent<BoxCollider2D>();
     }
@@ -44,11 +47,13 @@ public class Coin : MonoBehaviour
             if (m_isChestPickUp && m_canPickup)
             {
                 GameManager.Instance.AddCoin(chestPickupAmount);
+                PlayerAnimation.Instance.CoinPickupAnim();
                 Destroy(gameObject);
             }
-            else if(!m_isChestPickUp)
+            else if (!m_isChestPickUp)
             {
                 GameManager.Instance.AddCoin(pickupAmount);
+                PlayerAnimation.Instance.CoinPickupAnim();
                 Destroy(gameObject);
             }
         }
@@ -62,6 +67,7 @@ public class Coin : MonoBehaviour
     private IEnumerator ForceCoinRoutine()
     {
         m_isChestPickUp = true;
+
         m_canPickup = false;
 
         m_rigidBody.velocity = Vector2.up * 3;

@@ -8,6 +8,11 @@ using System;
 public class UIHandler : MonoBehaviour
 {
     public static UIHandler Instance { get; private set; }
+    [Header("Screens")]
+    public GameObject gameScreen;
+    public GameObject menuScreen;
+    public GameObject failedScreen;
+
     [Header("Chest")]
     public TextMeshProUGUI coinText;
     public TextMeshProUGUI chestText;
@@ -71,15 +76,35 @@ public class UIHandler : MonoBehaviour
     {
         CheckPlayer();
 
-        #if UNITY_EDITOR
-            ShowTestButtons();
-        #endif
+#if UNITY_EDITOR
+        ShowTestButtons();
+#endif
     }
 
+    //test code
     private void ShowTestButtons()
     {
         joystickTestButton.gameObject.SetActive(true);
+
+        if (InputDetection.instance.isJoystickControlsForMobileEnabled)
+        {
+            joystickTestButton.GetComponent<Image>().color = Color.red;
+        }
+        else
+        {
+            joystickTestButton.GetComponent<Image>().color = Color.white;
+        }
+
         keyboardTestButton.gameObject.SetActive(true);
+
+        if (!InputDetection.instance.isJoystickControlsForMobileEnabled)
+        {
+            keyboardTestButton.GetComponent<Image>().color = Color.red;
+        }
+        else
+        {
+            keyboardTestButton.GetComponent<Image>().color = Color.white;
+        }
     }
 
     private void CheckPlayer()
@@ -130,6 +155,7 @@ public class UIHandler : MonoBehaviour
         }
     }
 
+    //handles attacking,jumping and interact buttons for mobile
     public void MobileButtonHandler(bool status, bool isAttacking, bool isJumping, bool isInteracting)
     {
         if (isAttacking)
@@ -180,6 +206,34 @@ public class UIHandler : MonoBehaviour
             dashTextMesh.color = Color.red;
             dashTextMesh.text = "DASH";
             dashButtonImage.color = Color.white;
+        }
+    }
+
+    public void ShowMenu(bool status)
+    {
+        if (status)
+        {
+            gameScreen.SetActive(false);
+            menuScreen.SetActive(true);
+        }
+        else
+        {
+            gameScreen.SetActive(true);
+            menuScreen.SetActive(false);
+        }
+    }
+
+    public void ShowFailedScreen(bool status)
+    {
+        if (status)
+        {
+            gameScreen.SetActive(false);
+            failedScreen.SetActive(true);
+        }
+        else
+        {
+            failedScreen.SetActive(false);
+            gameScreen.SetActive(true);
         }
     }
 }

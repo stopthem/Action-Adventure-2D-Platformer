@@ -12,3 +12,8 @@ public interface IDamageable<T>
     void Damage(T damageTaken);
     void Damage(T damageTaken, Vector3 whoDamaged);
 }
+
+public interface IDamageableEnemy<T>
+{
+    void Damage(T damageTaken);
+}

@@ -53,10 +53,10 @@ MonoBehaviour:
     value: 1
   temperature:
     overrideState: 0
-    value: 2
+    value: 68
   tint:
-    overrideState: 0
-    value: 100
+    overrideState: 1
+    value: 0
   colorFilter:
     overrideState: 0
     value: {r: 1, g: 1, b: 1, a: 1}
@@ -80,7 +80,7 @@ MonoBehaviour:
     value: 97
   mixerRedOutGreenIn:
     overrideState: 0
-    value: -52
+    value: -200
   mixerRedOutBlueIn:
     overrideState: 0
     value: 40

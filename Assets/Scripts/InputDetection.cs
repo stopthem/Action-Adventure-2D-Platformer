@@ -35,7 +35,7 @@ public class InputDetection : MonoBehaviour
         // }
 
     }
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     public void EnableKeyboard()
     {
         isJoystickControlsForMobileEnabled = false;
@@ -46,7 +46,7 @@ public class InputDetection : MonoBehaviour
         isJoystickControlsForMobileEnabled = true;
         UIHandler.Instance.ShowJoysticks(true);
     }
-    #endif
+#endif
 
-    
+
 }

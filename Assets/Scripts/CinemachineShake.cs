@@ -5,7 +5,7 @@ using Cinemachine;
 
 public class CinemachineShake : MonoBehaviour
 {
-    public static CinemachineShake Instance {get; private set;}
+    public static CinemachineShake Instance { get; private set; }
 
     private CinemachineVirtualCamera m_cinemachine;
     private CinemachineBasicMultiChannelPerlin cinemachineBasicMultiChannelPerlin;
@@ -25,7 +25,7 @@ public class CinemachineShake : MonoBehaviour
 
     public void ShakeCamera(float power, float time)
     {
-        StartCoroutine(ShakeRoutine(power,time));
+        StartCoroutine(ShakeRoutine(power, time));
     }
 
     private IEnumerator ShakeRoutine(float power, float time)

@@ -94,7 +94,7 @@ public class HealthBar : MonoBehaviour
 
         if (barTransform.localScale.x < damagedBarTransform.localScale.x)
         {
-            damagedBarTransform.localScale -= new Vector3(shrinkSpeed * Time.deltaTime,0,0);
+            damagedBarTransform.localScale -= new Vector3(shrinkSpeed * Time.deltaTime, 0, 0);
         }
     }
 

@@ -313,7 +313,7 @@ public class EnemyMovement : MonoBehaviour
         yield return new WaitForSeconds(5f);
         m_boxCollider2D.enabled = false;
         theRB2D.velocity = Vector2.down / 5;
-        Destroy(gameObject,3f);
+        Destroy(gameObject, 3f);
     }
 
     private void OnCollisionStay2D(Collision2D other)

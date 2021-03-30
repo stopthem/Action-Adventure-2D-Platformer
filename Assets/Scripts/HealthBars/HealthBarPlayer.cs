@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class HealthBarPlayer : MonoBehaviour
 {
     private PlayerController m_playerController;
-    
+
     public float shrinkSpeed;
 
     public Image barImage;

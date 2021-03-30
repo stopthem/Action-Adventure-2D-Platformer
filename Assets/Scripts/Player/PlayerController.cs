@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     [SerializeField] private float health;
     [SerializeField] private float knockBackPowerHit;
     [SerializeField] private float invincibleDuration;
+    [SerializeField] private float timeToWaitAfterDeath;
     private float currentHealth;
     private float m_knockbackDirection;
     [Header("CameraShake")]
@@ -100,26 +101,32 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     public IEnumerator IsPoisonedRoutine(float perTick, float duration, Vector3 position, float damage)
     {
-        Damage(damage, position);
-
-        float durationPerTick = duration / perTick;
-
-        for (int i = 1; i <= durationPerTick; i++)
+        if (m_canTakeDamage)
         {
+            isPoisoned = true;
+            CameraPostProcess.Instance.Poisoned(true);
+            Damage(damage, position);
 
-            m_poisonedDamage = true;
-            Damage(.5f);
-            if (isDead)
+            float durationPerTick = duration / perTick;
+
+            for (int i = 1; i <= durationPerTick; i++)
             {
-                isPoisoned = false;
-                break;
-            }
-            m_poisonedDamage = false;
-            yield return new WaitForSeconds(perTick);
 
+                m_poisonedDamage = true;
+                Damage(.5f);
+                if (isDead)
+                {
+                    isPoisoned = false;
+                    break;
+                }
+                m_poisonedDamage = false;
+                yield return new WaitForSeconds(perTick);
+
+            }
+            CameraPostProcess.Instance.Poisoned(false);
+            isPoisoned = false;
         }
 
-        isPoisoned = false;
     }
 
     private void HandleAttack()
@@ -278,6 +285,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
     {
         if (m_canTakeDamage)
         {
+
             isDashAttacking = false;
 
             CinemachineShake.Instance.ShakeCamera(cameraShakeIntensity, cameraShakeTime);
@@ -360,8 +368,16 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     public void Killed()
     {
+        StartCoroutine(KilledRoutine());
+    }
+
+    private IEnumerator KilledRoutine()
+    {
         PlayerAnimation.Instance.DeathAnimation();
         isDead = true;
+        yield return new WaitForSeconds(timeToWaitAfterDeath);
+        yield return SceneHandler.Instance.FadeImageRoutine(false);
+        UIHandler.Instance.ShowFailedScreen(true);
     }
 
     public float GetHealthNormalized()
@@ -379,7 +395,7 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
             PlayerMovement.Instance.dashButtonUsed = 0;
             isDashAttacking = true;
             HandleAttack();
-            UIHandler.Instance.DashButton(false,false);
+            UIHandler.Instance.DashButton(false, false);
         }
     }
     //ONCLICK

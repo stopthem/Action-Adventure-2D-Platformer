@@ -42,7 +42,7 @@ public class Skeleton : Enemy
         m_enemyAnimation.Reborn(true);
         isDead = false;
         currentHealth = health;
-        
+
         yield return new WaitForSeconds(.5f);
 
         m_enemyAnimation.Reborn(false);
