@@ -24,7 +24,7 @@ public class PlayerMovement : MonoBehaviour
     private bool m_canDash = true;
 
     [Header("General")]
-    [SerializeField] private float moveSpeed;
+    public float moveSpeed;
     [SerializeField] private float jumpSpeed;
     [HideInInspector] public float horizontalMove;
     [HideInInspector] public float direction;

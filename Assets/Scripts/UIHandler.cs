@@ -12,10 +12,10 @@ public class UIHandler : MonoBehaviour
     public GameObject gameScreen;
     public GameObject menuScreen;
     public GameObject failedScreen;
+    public GameObject shopScreen;
 
     [Header("Chest")]
     public TextMeshProUGUI coinText;
-    public TextMeshProUGUI chestText;
 
     public GameObject leftJoystick;
 
@@ -142,7 +142,7 @@ public class UIHandler : MonoBehaviour
         coinText.text = number.ToString();
     }
 
-    public void ShowChestText(bool status)
+    public void ShowChestText(bool status, TextMeshProUGUI chestText)
     {
         chestText.gameObject.SetActive(status);
         if (InputDetection.instance.isJoystickControlsForMobileEnabled)

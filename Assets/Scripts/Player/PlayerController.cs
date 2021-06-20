@@ -20,12 +20,12 @@ public class PlayerController : MonoBehaviour, IDamageable<float>, IKillable
 
     [Header("General")]
     [SerializeField] private float attackRange;
-    [SerializeField] private float damage;
-    [SerializeField] private float health;
+    public float damage;
+    public float health;
     [SerializeField] private float knockBackPowerHit;
-    [SerializeField] private float invincibleDuration;
+    public float invincibleDuration;
     [SerializeField] private float timeToWaitAfterDeath;
-    private float currentHealth;
+    [HideInInspector] public float currentHealth;
     private float m_knockbackDirection;
     [Header("CameraShake")]
     [SerializeField] private float cameraShakeIntensity;

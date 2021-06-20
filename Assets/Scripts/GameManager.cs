@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     public float startingCoins;
-    private float m_currentCoins;
+    [HideInInspector] public float m_currentCoins;
 
     public bool isPaused { get; private set; }
 
@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         m_currentCoins = startingCoins;
+        UIHandler.Instance.UpdateCoinText(m_currentCoins);
     }
 
     public void AddCoin(float amount)

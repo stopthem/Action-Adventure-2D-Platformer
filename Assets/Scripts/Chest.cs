@@ -10,13 +10,14 @@ public class Chest : MonoBehaviour
     private Animator m_animator;
 
     private Button interactButton;
-    private Image interactButtonImage;
 
 
     private bool m_isOpened;
     private bool m_canThrow;
     private bool m_canPickup;
     [HideInInspector] public bool m_ontriggerEntered;
+
+    [SerializeField] private TextMeshProUGUI chestText;
 
     private void Awake()
     {
@@ -28,7 +29,6 @@ public class Chest : MonoBehaviour
         if (InputDetection.instance.isJoystickControlsForMobileEnabled)
         {
             interactButton = GameObject.Find("JoystickInteract").GetComponent<Button>();
-            interactButtonImage = interactButton.GetComponent<Image>();
         }
     }
 
@@ -48,7 +48,7 @@ public class Chest : MonoBehaviour
             if (m_isOpened)
             {
                 UIHandler.Instance.MobileButtonHandler(false, false, false, true);
-                UIHandler.Instance.ShowChestText(false);
+                UIHandler.Instance.ShowChestText(false, chestText);
             }
 
             CheckForInteract();
@@ -66,7 +66,7 @@ public class Chest : MonoBehaviour
 
             if (m_isOpened)
             {
-                UIHandler.Instance.ShowChestText(false);
+                UIHandler.Instance.ShowChestText(false, chestText);
             }
         }
     }
@@ -96,11 +96,10 @@ public class Chest : MonoBehaviour
         if (other.gameObject.CompareTag("Player") && !m_isOpened)
         {
             m_ontriggerEntered = true;
-            UIHandler.Instance.ShowChestText(true);
+            UIHandler.Instance.ShowChestText(true, chestText);
 
             if (m_canPickup)
             {
-
                 m_animator.SetTrigger("ChestOpen");
                 SpawnCoin();
                 m_isOpened = true;
@@ -113,7 +112,7 @@ public class Chest : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             m_ontriggerEntered = false;
-            UIHandler.Instance.ShowChestText(false);
+            UIHandler.Instance.ShowChestText(false, chestText);
         }
     }
 

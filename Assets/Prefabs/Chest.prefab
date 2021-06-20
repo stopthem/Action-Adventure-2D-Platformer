@@ -144,6 +144,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   coin: {fileID: 814801426825322071, guid: 89fd4087c890e7f4d95081cbf132a770, type: 3}
+  m_ontriggerEntered: 0
+  chestText: {fileID: 5032616546837149710}
 --- !u!1 &5032616546468275213
 GameObject:
   m_ObjectHideFlags: 0
