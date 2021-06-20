@@ -9,6 +9,10 @@ public class GameManager : MonoBehaviour
     public float startingCoins;
     [HideInInspector] public float m_currentCoins;
 
+    public int wormsKilled;
+
+    public bool canFinish;
+
     public bool isPaused { get; private set; }
 
     private void Awake()
@@ -18,8 +22,17 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        Time.timeScale = 1;
         m_currentCoins = startingCoins;
         UIHandler.Instance.UpdateCoinText(m_currentCoins);
+    }
+
+    private void Update()
+    {
+        if (wormsKilled == 2)
+        {
+            canFinish = true;
+        }
     }
 
     public void AddCoin(float amount)

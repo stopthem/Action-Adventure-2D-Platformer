@@ -13,6 +13,7 @@ public class UIHandler : MonoBehaviour
     public GameObject menuScreen;
     public GameObject failedScreen;
     public GameObject shopScreen;
+    public GameObject finishScreen;
 
     [Header("Chest")]
     public TextMeshProUGUI coinText;
@@ -135,6 +136,13 @@ public class UIHandler : MonoBehaviour
         jumpJoystick.gameObject.SetActive(status);
         interactButton.gameObject.SetActive(status);
         dashButton.gameObject.SetActive(status);
+    }
+
+    public void Finish()
+    {
+        gameScreen.SetActive(false);
+        finishScreen.SetActive(true);
+        Time.timeScale = 0;
     }
 
     public void UpdateCoinText(float number)

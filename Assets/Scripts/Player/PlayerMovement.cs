@@ -326,6 +326,10 @@ public class PlayerMovement : MonoBehaviour
 
             }
         }
+        if (other.gameObject.CompareTag("Finish"))
+        {
+            UIHandler.Instance.Finish();
+        }
     }
 
     public IEnumerator KnockbackRoutine(float power)

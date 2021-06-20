@@ -49,6 +49,7 @@ public class Enemy : MonoBehaviour, IDamageableEnemy<float>, IKillable
 
     private void Start()
     {
+        bloodAnimation.SetActive(false);
         currentHealth = health;
     }
 
@@ -100,7 +101,7 @@ public class Enemy : MonoBehaviour, IDamageableEnemy<float>, IKillable
         }
 
         currentHealth -= damageTaken;
-        
+
         if (!isDead)
         {
             HandlePopup(damageTaken);
@@ -163,6 +164,11 @@ public class Enemy : MonoBehaviour, IDamageableEnemy<float>, IKillable
         StartCoroutine(m_enemyMovement.DeathSequence());
 
         DisableColliders();
+
+        if (gameObject.name == "Worm" || gameObject.name == "Worm (1)")
+        {
+            GameManager.Instance.wormsKilled++;
+        }
     }
 
     private void DisableColliders()
